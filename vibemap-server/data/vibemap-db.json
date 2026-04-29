@@ -1,0 +1,61 @@
+{
+  "questions": [
+    {
+      "id": "lunch-jjajang-jjamppong",
+      "title": "오늘 점심은 짜장 vs 짬뽕?",
+      "category": "food",
+      "status": "active",
+      "choices": [
+        { "id": "blue", "label": "짜장면", "resultLabel": "짜장면 강세" },
+        { "id": "red", "label": "짬뽕", "resultLabel": "짬뽕 강세" },
+        { "id": "gray", "label": "아직 못 정함", "resultLabel": "선택 적음" }
+      ],
+      "tieLabel": "팽팽함",
+      "createdAt": "2026-04-29T00:00:00+09:00"
+    }
+  ],
+  "regions": [
+    { "id": "national", "name": "전국", "level": "nation", "parentId": null },
+    { "id": "seoul", "name": "서울", "level": "province", "parentId": "national" },
+    { "id": "busan", "name": "부산", "level": "province", "parentId": "national" },
+    { "id": "daegu", "name": "대구", "level": "province", "parentId": "national" },
+    { "id": "incheon", "name": "인천", "level": "province", "parentId": "national" },
+    { "id": "gwangju", "name": "광주", "level": "province", "parentId": "national" },
+    { "id": "daejeon", "name": "대전", "level": "province", "parentId": "national" },
+    { "id": "ulsan", "name": "울산", "level": "province", "parentId": "national" },
+    { "id": "sejong", "name": "세종", "level": "province", "parentId": "national" },
+    { "id": "gyeonggi", "name": "경기", "level": "province", "parentId": "national" },
+    { "id": "gangwon", "name": "강원", "level": "province", "parentId": "national" },
+    { "id": "chungbuk", "name": "충북", "level": "province", "parentId": "national" },
+    { "id": "chungnam", "name": "충남", "level": "province", "parentId": "national" },
+    { "id": "jeonbuk", "name": "전북", "level": "province", "parentId": "national" },
+    { "id": "jeonnam", "name": "전남", "level": "province", "parentId": "national" },
+    { "id": "gyeongbuk", "name": "경북", "level": "province", "parentId": "national" },
+    { "id": "gyeongnam", "name": "경남", "level": "province", "parentId": "national" },
+    { "id": "jeju", "name": "제주", "level": "province", "parentId": "national" },
+    { "id": "suwon", "name": "수원시", "level": "city", "parentId": "gyeonggi" }
+  ],
+  "snapshots": [
+    { "questionId": "lunch-jjajang-jjamppong", "regionId": "seoul", "period": "7d", "blue": 3745, "red": 3282, "gray": 1173 },
+    { "questionId": "lunch-jjajang-jjamppong", "regionId": "busan", "period": "7d", "blue": 2209, "red": 2811, "gray": 280 },
+    { "questionId": "lunch-jjajang-jjamppong", "regionId": "daegu", "period": "7d", "blue": 1725, "red": 2067, "gray": 408 },
+    { "questionId": "lunch-jjajang-jjamppong", "regionId": "incheon", "period": "7d", "blue": 1243, "red": 1238, "gray": 1419 },
+    { "questionId": "lunch-jjajang-jjamppong", "regionId": "gwangju", "period": "7d", "blue": 603, "red": 602, "gray": 1595 },
+    { "questionId": "lunch-jjajang-jjamppong", "regionId": "daejeon", "period": "7d", "blue": 1056, "red": 986, "gray": 458 },
+    { "questionId": "lunch-jjajang-jjamppong", "regionId": "ulsan", "period": "7d", "blue": 889, "red": 845, "gray": 366 },
+    { "questionId": "lunch-jjajang-jjamppong", "regionId": "sejong", "period": "7d", "blue": 231, "red": 231, "gray": 638 },
+    { "questionId": "lunch-jjajang-jjamppong", "regionId": "gyeonggi", "period": "7d", "blue": 7630, "red": 8518, "gray": 2292 },
+    { "questionId": "lunch-jjajang-jjamppong", "regionId": "gangwon", "period": "7d", "blue": 1019, "red": 898, "gray": 283 },
+    { "questionId": "lunch-jjajang-jjamppong", "regionId": "chungbuk", "period": "7d", "blue": 874, "red": 797, "gray": 229 },
+    { "questionId": "lunch-jjajang-jjamppong", "regionId": "chungnam", "period": "7d", "blue": 546, "red": 546, "gray": 1508 },
+    { "questionId": "lunch-jjajang-jjamppong", "regionId": "jeonbuk", "period": "7d", "blue": 882, "red": 819, "gray": 399 },
+    { "questionId": "lunch-jjajang-jjamppong", "regionId": "jeonnam", "period": "7d", "blue": 504, "red": 504, "gray": 1392 },
+    { "questionId": "lunch-jjajang-jjamppong", "regionId": "gyeongbuk", "period": "7d", "blue": 651, "red": 651, "gray": 1798 },
+    { "questionId": "lunch-jjajang-jjamppong", "regionId": "gyeongnam", "period": "7d", "blue": 693, "red": 693, "gray": 1914 },
+    { "questionId": "lunch-jjajang-jjamppong", "regionId": "jeju", "period": "7d", "blue": 189, "red": 189, "gray": 522 },
+    { "questionId": "lunch-jjajang-jjamppong", "regionId": "suwon", "period": "7d", "blue": 912, "red": 729, "gray": 539 }
+  ],
+  "participants": [],
+  "choices": [],
+  "events": []
+}

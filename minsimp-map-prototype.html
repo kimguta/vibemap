@@ -1,0 +1,1317 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>바이브맵 프로토타입</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #eef2f7;
+      --panel: rgba(255, 255, 255, 0.92);
+      --line: #d7deea;
+      --ink: #162235;
+      --muted: #6e7c93;
+      --blue: #3f2518;
+      --red: #df5531;
+      --tie: #8a6f58;
+      --gray: #8e99ac;
+      --accent: #edf3ff;
+      --accent-line: #bfd0ff;
+      --tile-size: 80px;
+      --tile-gap-x: 7px;
+      --tile-gap-y: 0px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(63, 37, 24, 0.1), transparent 28%),
+        radial-gradient(circle at top right, rgba(223, 85, 49, 0.08), transparent 24%),
+        linear-gradient(180deg, #f7f9fc 0%, #eef2f7 100%);
+      font-family: "IBM Plex Sans KR", system-ui, sans-serif;
+      transition: background 180ms ease;
+    }
+
+    body.support-blue {
+      background:
+        radial-gradient(circle at top left, rgba(63, 37, 24, 0.2), transparent 32%),
+        radial-gradient(circle at top right, rgba(223, 85, 49, 0.06), transparent 24%),
+        linear-gradient(180deg, #f8f4ef 0%, #e9ded4 100%);
+    }
+
+    body.support-red {
+      background:
+        radial-gradient(circle at top left, rgba(63, 37, 24, 0.06), transparent 28%),
+        radial-gradient(circle at top right, rgba(223, 85, 49, 0.17), transparent 30%),
+        linear-gradient(180deg, #fff8f4 0%, #ffe9df 100%);
+    }
+
+    body.support-gray {
+      background:
+        radial-gradient(circle at top left, rgba(63, 37, 24, 0.05), transparent 26%),
+        radial-gradient(circle at top right, rgba(223, 85, 49, 0.05), transparent 24%),
+        linear-gradient(180deg, #f7f9fb 0%, #eef2f7 100%);
+    }
+
+    svg[aria-hidden="true"] {
+      position: absolute;
+      width: 0;
+      height: 0;
+      overflow: hidden;
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-family: "Manrope", "IBM Plex Sans KR", sans-serif;
+      font-size: 26px;
+      line-height: 1;
+      letter-spacing: -0.03em;
+    }
+
+    .brand span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .issue-card {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .issue-kicker {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .issue-question {
+      margin: 0;
+      font-family: "Manrope", "IBM Plex Sans KR", sans-serif;
+      font-size: 22px;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+
+    .issue-options {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .period-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .period-chip,
+    .chip {
+      height: 34px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.96);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+      font-size: 13px;
+    }
+
+    .period-chip:hover,
+    .chip:hover,
+    .period-chip.active,
+    .chip.active {
+      background: var(--accent);
+      border-color: var(--accent-line);
+    }
+
+    .period-chip.active,
+    .chip.active {
+      transform: translateY(1px);
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr) 260px;
+      gap: 14px;
+      padding: 14px;
+      min-height: 0;
+    }
+
+    @media (min-width: 981px) {
+      body {
+        min-height: 100vh;
+        overflow: auto;
+      }
+
+      .app {
+        min-height: 100vh;
+      }
+
+      main {
+        min-height: calc(100vh - 59px);
+        overflow: visible;
+      }
+
+      .panel {
+        max-height: none;
+      }
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: 0 18px 50px rgba(22, 34, 53, 0.07);
+      min-width: 0;
+      transition: background 180ms ease, border-color 180ms ease;
+    }
+
+    body.support-blue .panel {
+      background: rgba(255, 250, 244, 0.95);
+      border-color: #b79d8b;
+    }
+
+    body.support-red .panel {
+      background: rgba(255, 248, 244, 0.95);
+      border-color: #efc4b3;
+    }
+
+    aside.panel {
+      overflow: visible;
+    }
+
+    .section {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(216, 225, 238, 0.85);
+    }
+
+    .section:last-child {
+      border-bottom: 0;
+    }
+
+    h2, h3 {
+      margin: 0 0 9px;
+      font-family: "Manrope", "IBM Plex Sans KR", sans-serif;
+      letter-spacing: -0.02em;
+    }
+
+    h2 { font-size: 17px; }
+    h3 { font-size: 15px; }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .local-card {
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #eef3f9;
+    }
+
+    .local-card strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 19px;
+    }
+
+    .support-buttons {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .support-note {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .support {
+      height: 40px;
+      border: 1px solid transparent;
+      border-radius: 14px;
+      color: #ffffff;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 4px 4px 0 rgba(22, 34, 53, 0.18);
+      transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+    }
+
+    .support.blue { background: var(--blue); }
+    .support.red { background: var(--red); }
+    .support.gray { background: var(--gray); }
+
+    .support.selected {
+      transform: translate(4px, 4px);
+      box-shadow: 0 0 0 rgba(22, 34, 53, 0);
+      filter: brightness(0.95);
+    }
+
+    .metric-list,
+    .legend {
+      display: grid;
+      gap: 7px;
+    }
+
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .metric strong {
+      font-size: 15px;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 4px;
+      border: 1px solid rgba(22, 34, 53, 0.12);
+      flex: 0 0 auto;
+    }
+
+    .dot.blue { background: var(--blue); }
+    .dot.red { background: var(--red); }
+    .dot.tie {
+      background: linear-gradient(
+        90deg,
+        #4a2c1d 0%,
+        #76503a 34%,
+        #a8633f 66%,
+        #df5531 100%
+      );
+    }
+    .dot.gray { background: var(--gray); }
+
+    .notice {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .banner-panel {
+      display: grid;
+      align-content: start;
+      gap: 12px;
+      padding: 14px;
+      overflow: visible;
+    }
+
+    .banner-card {
+      min-height: 132px;
+      padding: 16px;
+      border: 1px solid rgba(216, 225, 238, 0.95);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .banner-card.featured {
+      background:
+        linear-gradient(135deg, rgba(41, 98, 255, 0.1), rgba(223, 77, 99, 0.08)),
+        rgba(255, 255, 255, 0.82);
+    }
+
+    .banner-eyebrow {
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .banner-title {
+      margin: 0 0 8px;
+      font-family: "Manrope", "IBM Plex Sans KR", sans-serif;
+      font-size: 17px;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+
+    .banner-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .banner-contact {
+      display: inline-flex;
+      align-items: center;
+      margin-top: 12px;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      word-break: break-all;
+    }
+
+    .banner-contact:hover {
+      text-decoration: underline;
+    }
+
+    .banner-stat {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(216, 225, 238, 0.9);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .banner-stat strong {
+      color: var(--ink);
+      font-size: 20px;
+    }
+
+    .map-panel {
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .map-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 18px 20px 10px;
+    }
+
+    .map-head h2 {
+      margin-bottom: 6px;
+    }
+
+    .region-tabs {
+      display: flex;
+      gap: 8px;
+      padding: 0 20px 12px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .region-tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .map-body {
+      min-height: 0;
+      padding: 16px 20px 20px;
+      display: grid;
+      place-items: center;
+    }
+
+    #map {
+      width: min(100%, 900px);
+      padding: 10px;
+      border-radius: 28px;
+      background: transparent;
+      overflow: hidden;
+    }
+
+    .cartogram {
+      display: grid;
+      column-gap: var(--tile-gap-x);
+      row-gap: var(--tile-gap-y);
+      justify-content: center;
+      transform-origin: center top;
+      transition: transform 160ms ease;
+      padding-bottom: calc(var(--tile-size) * 0.2);
+    }
+
+    .cols-5 { grid-template-columns: repeat(5, var(--tile-size)); }
+    .cols-6 { grid-template-columns: repeat(6, var(--tile-size)); }
+    .cols-7 { grid-template-columns: repeat(7, var(--tile-size)); }
+    .cols-9 { grid-template-columns: repeat(9, var(--tile-size)); }
+    .cols-dynamic { grid-template-columns: repeat(var(--dynamic-cols, 3), var(--tile-size)); }
+    .cols-five { grid-template-columns: repeat(3, var(--tile-size)); }
+
+    .tile {
+      width: var(--tile-size);
+      height: calc(var(--tile-size) * 1.14);
+      padding: 8px 10px;
+      border: 0;
+      border-radius: 18px;
+      background: #ffffff;
+      clip-path: url("#rounded-hex");
+      display: grid;
+      place-items: center;
+      text-align: center;
+      font-family: "IBM Plex Sans KR", system-ui, sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.2;
+      cursor: pointer;
+      transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+      box-shadow: none;
+    }
+
+    .tile:hover {
+      transform: translateY(-2px) scale(1.02);
+    }
+
+    .tile.selected {
+      outline: 3px solid rgba(22, 34, 53, 0.18);
+      outline-offset: 3px;
+    }
+
+    .tile.blue {
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .tile.red {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .tile.tie {
+      background: linear-gradient(
+        90deg,
+        #4a2c1d 0%,
+        #76503a 36%,
+        #a8633f 64%,
+        #df5531 100%
+      );
+      color: #fff;
+    }
+
+    .tile.gray {
+      background: var(--gray);
+      color: #fff;
+    }
+
+    .tile.empty {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .tile.offset {
+      transform: translateX(calc((var(--tile-size) + var(--tile-gap-x)) * 0.5));
+    }
+
+    .tile.offset:hover {
+      transform: translateX(calc((var(--tile-size) + var(--tile-gap-x)) * 0.5)) translateY(-2px) scale(1.02);
+    }
+
+    .tile.stacked {
+      margin-top: calc(var(--tile-size) * -0.24);
+    }
+
+    #map[data-view="national"] .cartogram,
+    #map[data-view="gyeonggi"] .cartogram {
+      transform: none;
+    }
+
+    #map[data-view="gyeonggi"] {
+      width: min(100%, 860px);
+    }
+
+    @media (max-width: 980px) {
+      header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      aside.panel {
+        order: 2;
+      }
+
+      .map-panel {
+        order: 1;
+      }
+
+      .banner-panel {
+        order: 3;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        overflow: visible;
+      }
+    }
+
+    @media (max-width: 720px) {
+      :root {
+        --tile-size: 58px;
+        --tile-gap-x: 4px;
+      }
+
+      .map-body {
+        padding: 4px 8px 12px;
+        place-items: start center;
+      }
+
+      .map-head,
+      .region-tabs {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+
+      .issue-question {
+        font-size: 19px;
+      }
+
+      .banner-panel {
+        grid-template-columns: 1fr;
+      }
+
+      #map { padding: 4px; }
+
+      .cartogram { padding-right: 24px; }
+      .cartogram.compact-map { padding-left: 12px; padding-right: 12px; }
+      .cartogram { row-gap: 0; }
+
+      .cols-9 { grid-template-columns: repeat(4, var(--tile-size)); }
+      .cols-7 { grid-template-columns: repeat(4, var(--tile-size)); }
+      .cols-6 { grid-template-columns: repeat(4, var(--tile-size)); }
+      .cols-5 { grid-template-columns: repeat(4, var(--tile-size)); }
+      .cols-dynamic { grid-template-columns: repeat(var(--dynamic-cols, 3), var(--tile-size)); }
+      .cols-five { grid-template-columns: repeat(3, var(--tile-size)); }
+
+      .tile { font-size: 11px; padding: 6px 8px; }
+
+      .tile.offset {
+        transform: translateX(calc((var(--tile-size) + var(--tile-gap-x)) * 0.5));
+      }
+
+      .tile.offset:hover {
+        transform: translateX(calc((var(--tile-size) + var(--tile-gap-x)) * 0.5)) translateY(-2px) scale(1.02);
+      }
+
+      .tile.stacked { margin-top: calc(var(--tile-size) * -0.18); }
+
+      #map[data-view="national"] .cartogram,
+      #map[data-view="gyeonggi"] .cartogram {
+        transform: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <svg aria-hidden="true" focusable="false">
+    <defs>
+      <clipPath id="rounded-hex" clipPathUnits="objectBoundingBox">
+        <path d="M .5 .02 Q .53 .02 .56 .035 L .94 .235 Q .98 .255 .98 .3 L .98 .7 Q .98 .745 .94 .765 L .56 .965 Q .53 .98 .5 .98 Q .47 .98 .44 .965 L .06 .765 Q .02 .745 .02 .7 L .02 .3 Q .02 .255 .06 .235 L .44 .035 Q .47 .02 .5 .02 Z"></path>
+      </clipPath>
+    </defs>
+  </svg>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <h1>바이브맵</h1>
+        <span>지역별 선택 흐름 지도</span>
+      </div>
+      <div class="period-tabs" aria-label="기간 선택">
+        <button class="period-chip" data-period="1d" type="button">1일</button>
+        <button class="period-chip active" data-period="7d" type="button">7일</button>
+        <button class="period-chip" data-period="30d" type="button">30일</button>
+        <button class="period-chip" data-period="1y" type="button">1년</button>
+      </div>
+    </header>
+
+    <main>
+      <aside class="panel">
+        <section class="section issue-card" aria-label="현재 이슈">
+          <div class="issue-kicker">TODAY ISSUE</div>
+          <p class="issue-question">오늘 점심은 짜장 vs 짬뽕?</p>
+          <div class="issue-options">짜장면 · 짬뽕 · 아직 못 정함</div>
+        </section>
+
+        <section class="section">
+          <h2>내 접속 지역</h2>
+          <div class="local-card">
+            <strong id="current-location-label">경기도 수원시</strong>
+            <div class="muted">현재 프로토타입은 샘플 위치를 사용합니다.</div>
+          </div>
+          <div class="support-buttons" aria-label="반응 선택">
+            <button class="support blue" type="button">짜장면</button>
+            <button class="support red" type="button">짬뽕</button>
+            <button class="support gray" type="button">아직 못 정함</button>
+          </div>
+        </section>
+
+        <section class="section">
+          <h3>오늘의 요약</h3>
+          <div class="metric-list">
+            <div class="metric"><span>전국 참여</span><strong>84,219</strong></div>
+            <div class="metric"><span id="local-summary-label">경기 참여</span><strong id="local-summary-total">18,440</strong></div>
+            <div class="metric"><span>팽팽한 지역</span><strong>9곳</strong></div>
+            <div class="metric"><span>참여 부족</span><strong>4곳</strong></div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h3>반응 기준</h3>
+          <div class="legend">
+            <div class="legend-row"><span class="dot blue"></span><span>짜장면 강세</span></div>
+            <div class="legend-row"><span class="dot red"></span><span>짬뽕 강세</span></div>
+            <div class="legend-row"><span class="dot tie"></span><span>팽팽함</span></div>
+            <div class="legend-row"><span class="dot gray"></span><span>선택 적음</span></div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="notice">표시되는 값은 서비스 안에서 선택된 결과 기준입니다.</div>
+        </section>
+      </aside>
+
+      <section class="panel map-panel">
+        <div class="map-head">
+          <div>
+            <h2 id="map-title">전국 바이브맵</h2>
+            <div class="muted" id="map-subtitle">서울 · 짜장면 강세 · 선택 차이 5.4%p · 최근 7일 참여 8,200명</div>
+          </div>
+        </div>
+        <nav class="region-tabs" id="region-tabs" aria-label="지역 선택"></nav>
+        <div class="map-body">
+          <div id="map"></div>
+        </div>
+      </section>
+
+      <aside class="panel banner-panel" aria-label="제휴 및 리포트 영역">
+        <div class="banner-card featured">
+          <div class="banner-eyebrow">TODAY BRIEF</div>
+          <h3 class="banner-title">점심 선택이 갈린 지역</h3>
+          <p class="banner-copy">최근 7일 기준, 선택이 팽팽해진 지역을 추적합니다.</p>
+          <div class="banner-stat"><span>미정 증가</span><strong>+12%</strong></div>
+        </div>
+
+        <div class="banner-card">
+          <div class="banner-eyebrow">SPONSOR</div>
+          <h3 class="banner-title">지역 선택 리포트</h3>
+          <p class="banner-copy">브랜드, 매장, 지역 단체와 연결할 수 있는 제휴 배너 자리입니다.</p>
+          <a class="banner-contact" href="mailto:vibemap.contact@gmail.com">vibemap.contact@gmail.com</a>
+        </div>
+
+        <div class="banner-card">
+          <div class="banner-eyebrow">TREND</div>
+          <h3 class="banner-title">팽팽한 지역 TOP 5</h3>
+          <p class="banner-copy">선택 결과를 바탕으로 오늘 가장 팽팽한 지역을 보여줍니다.</p>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const regions = {
+      "수원시": { party: "blue", label: "블루바이브 강함", diff: 8.4, total: 2180 },
+      "성남시": { party: "red", label: "레드바이브 강함", diff: 3.2, total: 1930 },
+      "고양시": { party: "tie", label: "흐름 접전", diff: 1.3, total: 1510 },
+      "용인시": { party: "red", label: "레드바이브 강함", diff: 6.7, total: 1720 },
+      "부천시": { party: "blue", label: "블루바이브 강함", diff: 7.1, total: 980 },
+      "안산시": { party: "blue", label: "블루바이브 강함", diff: 4.8, total: 870 },
+      "안양시": { party: "tie", label: "흐름 접전", diff: 0.7, total: 610 },
+      "남양주시": { party: "red", label: "레드바이브 강함", diff: 9.5, total: 760 },
+      "화성시": { party: "blue", label: "블루바이브 강함", diff: 3.7, total: 1030 },
+      "평택시": { party: "red", label: "레드바이브 강함", diff: 5.6, total: 690 },
+      "파주시": { party: "red", label: "레드바이브 강함", diff: 4.1, total: 430 },
+      "의정부시": { party: "blue", label: "블루바이브 강함", diff: 6.9, total: 520 },
+      "시흥시": { party: "blue", label: "블루바이브 강함", diff: 8.0, total: 640 },
+      "김포시": { party: "tie", label: "흐름 접전", diff: 1.5, total: 410 },
+      "광주시": { party: "gray", label: "관망 중", diff: 0, total: 24 },
+      "광명시": { party: "blue", label: "블루바이브 강함", diff: 10.2, total: 402 },
+      "군포시": { party: "tie", label: "흐름 접전", diff: 0.9, total: 313 },
+      "하남시": { party: "red", label: "레드바이브 강함", diff: 3.4, total: 280 },
+      "오산시": { party: "blue", label: "블루바이브 강함", diff: 7.0, total: 216 },
+      "이천시": { party: "red", label: "레드바이브 강함", diff: 11.2, total: 205 },
+      "안성시": { party: "red", label: "레드바이브 강함", diff: 13.4, total: 180 },
+      "구리시": { party: "blue", label: "블루바이브 강함", diff: 5.3, total: 218 },
+      "의왕시": { party: "blue", label: "블루바이브 강함", diff: 4.4, total: 197 },
+      "포천시": { party: "red", label: "레드바이브 강함", diff: 9.1, total: 149 },
+      "양주시": { party: "blue", label: "블루바이브 강함", diff: 5.8, total: 260 },
+      "동두천시": { party: "gray", label: "관망 중", diff: 0, total: 18 },
+      "과천시": { party: "blue", label: "블루바이브 강함", diff: 8.1, total: 172 },
+      "여주시": { party: "red", label: "레드바이브 강함", diff: 12.1, total: 205 },
+      "양평군": { party: "tie", label: "흐름 접전", diff: 2.1, total: 102 },
+      "가평군": { party: "gray", label: "관망 중", diff: 0, total: 21 },
+      "연천군": { party: "gray", label: "관망 중", diff: 0, total: 14 }
+    };
+
+    const provinceTabs = ["전국", "서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종", "경기", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주"];
+
+    const provinceStats = {
+      "서울": { party: "blue", label: "블루바이브 강함", diff: 5.4, total: 8200 },
+      "부산": { party: "red", label: "레드바이브 강함", diff: 6.2, total: 5300 },
+      "대구": { party: "red", label: "레드바이브 강함", diff: 7.3, total: 4200 },
+      "인천": { party: "gray", label: "관망 중", diff: 0, total: 3900 },
+      "광주": { party: "gray", label: "관망 중", diff: 0, total: 2800 },
+      "대전": { party: "tie", label: "흐름 접전", diff: 2.8, total: 2500 },
+      "울산": { party: "tie", label: "흐름 접전", diff: 2.1, total: 2100 },
+      "세종": { party: "gray", label: "관망 중", diff: 0, total: 1100 },
+      "경기": { party: "red", label: "레드바이브 강함", diff: 4.8, total: 18440 },
+      "강원": { party: "blue", label: "블루바이브 강함", diff: 5.5, total: 2200 },
+      "충북": { party: "blue", label: "블루바이브 강함", diff: 4.4, total: 1900 },
+      "충남": { party: "gray", label: "관망 중", diff: 0, total: 2600 },
+      "전북": { party: "tie", label: "흐름 접전", diff: 3.0, total: 2100 },
+      "전남": { party: "gray", label: "관망 중", diff: 0, total: 2400 },
+      "경북": { party: "gray", label: "관망 중", diff: 0, total: 3100 },
+      "경남": { party: "gray", label: "관망 중", diff: 0, total: 3300 },
+      "제주": { party: "gray", label: "관망 중", diff: 0, total: 900 }
+    };
+
+    const choiceLabels = {
+      blue: "짜장면 강세",
+      red: "짬뽕 강세",
+      tie: "팽팽함",
+      gray: "선택 적음"
+    };
+
+    Object.values(regions).forEach((stat) => {
+      stat.label = choiceLabels[stat.party] || stat.label;
+    });
+
+    Object.values(provinceStats).forEach((stat) => {
+      stat.label = choiceLabels[stat.party] || stat.label;
+    });
+
+    const nationalLayout = [
+      "", "인천", "서울", "경기", "강원", "", "",
+      "", "", "충남", "세종", "충북", "경북", "",
+      "", "", "", "대전", "", "대구", "울산",
+      "", "", "전북", "", "", "경남", "부산",
+      "", "광주", "전남", "", "", "", "",
+      "", "", "", "제주", "", "", ""
+    ];
+
+    const gyeonggiLayout = [
+      "", "", "연천군", "", "포천시", "", "", "", "",
+      "", "파주시", "양주시", "동두천시", "", "가평군", "", "", "",
+      "김포시", "고양시", "", "의정부시", "남양주시", "", "양평군", "", "",
+      "", "부천시", "광명시", "서울", "구리시", "하남시", "", "", "",
+      "", "시흥시", "안양시", "과천시", "성남시", "광주시", "", "", "",
+      "", "안산시", "군포시", "의왕시", "수원시", "용인시", "이천시", "여주시", "",
+      "", "", "화성시", "오산시", "", "", "안성시", "", "",
+      "", "", "", "평택시", "", "", "", "", ""
+    ];
+
+    const seoulLayout = [
+      "", "은평구", "도봉구", "노원구", "", "", "",
+      "", "서대문구", "강북구", "성북구", "중랑구", "", "",
+      "강서구", "마포구", "종로구", "동대문구", "광진구", "", "",
+      "", "양천구", "중구", "성동구", "강동구", "", "",
+      "", "구로구", "영등포구", "용산구", "송파구", "", "",
+      "", "금천구", "동작구", "서초구", "강남구", "", "",
+      "", "", "관악구", "", "", "", ""
+    ];
+
+    const genericLayouts = {
+      "부산": ["강서구", "북구", "사상구", "부산진구", "동래구", "사하구", "서구", "중구", "동구", "남구", "해운대구", "영도구", "수영구", "연제구", "금정구", "기장군"],
+      "대구": ["달성군", "달서구", "서구", "중구", "북구", "남구", "수성구", "동구", "군위군"],
+      "인천": ["강화군", "서구", "계양구", "부평구", "미추홀구", "중구", "동구", "남동구", "연수구", "옹진군"],
+      "광주": ["광산구", "북구", "서구", "남구", "동구"],
+      "대전": ["유성구", "대덕구", "서구", "중구", "동구"],
+      "울산": ["울주군", "북구", "중구", "남구", "동구"],
+      "세종": ["세종시"],
+      "강원": ["철원군", "화천군", "양구군", "인제군", "고성군", "춘천시", "홍천군", "속초시", "양양군", "횡성군", "평창군", "강릉시", "원주시", "영월군", "정선군", "동해시", "삼척시", "태백시"],
+      "충북": ["충주시", "제천시", "음성군", "괴산군", "진천군", "증평군", "단양군", "청주시", "보은군", "옥천군", "영동군"],
+      "충남": ["태안군", "서산시", "당진시", "예산군", "아산시", "논산시", "천안시", "보령시", "청양군", "공주시", "계룡시", "홍성군", "부여군", "서천군", "금산군"],
+      "전북": ["군산시", "익산시", "완주군", "진안군", "무주군", "김제시", "전주시", "임실군", "순창군", "부안군", "정읍시", "고창군", "남원시", "장수군"],
+      "전남": ["영광군", "장성군", "담양군", "곡성군", "구례군", "함평군", "나주시", "화순군", "여수시", "순천시", "광양시", "무안군", "목포시", "영암군", "해남군", "보성군", "장흥군", "신안군", "진도군", "완도군", "강진군", "고흥군"],
+      "경북": ["문경시", "예천군", "영주시", "봉화군", "울진군", "상주시", "의성군", "안동시", "영양군", "김천시", "구미시", "청송군", "영덕군", "성주군", "칠곡군", "영천시", "포항시", "고령군", "경산시", "청도군", "경주시", "울릉군"],
+      "경남": ["거창군", "함양군", "산청군", "합천군", "창녕군", "밀양시", "양산시", "의령군", "함안군", "창원시", "김해시", "하동군", "진주시", "사천시", "고성군", "통영시", "거제시", "남해군"],
+      "제주": ["제주시", "서귀포시"]
+    };
+
+    const customRegionLayouts = {
+      "강원": {
+        cols: 6,
+        items: [
+          "철원군", "화천군", "양구군", "인제군", "고성군", "",
+          "춘천시", "홍천군", "", "", "속초시", "양양군",
+          "원주시", "횡성군", "평창군", "정선군", "강릉시", "",
+          "", "영월군", "", "태백시", "동해시", "삼척시"
+        ]
+      },
+      "충북": {
+        cols: 5,
+        items: [
+          "", "충주시", "제천시", "단양군", "",
+          "음성군", "진천군", "증평군", "괴산군", "",
+          "", "", "청주시", "보은군", "",
+          "", "", "옥천군", "영동군", ""
+        ]
+      },
+      "전남": {
+        cols: 6,
+        items: [
+          "영광군", "장성군", "담양군", "곡성군", "구례군", "",
+          "함평군", "무안군", "나주시", "화순군", "순천시", "광양시",
+          "신안군", "목포시", "영암군", "장흥군", "보성군", "여수시",
+          "", "해남군", "강진군", "고흥군", "", "",
+          "", "진도군", "완도군", "", "", ""
+        ]
+      },
+      "경북": {
+        cols: 6,
+        items: [
+          "문경시", "예천군", "영주시", "봉화군", "울진군", "",
+          "상주시", "의성군", "안동시", "영양군", "영덕군", "",
+          "김천시", "구미시", "군위군", "청송군", "포항시", "울릉군",
+          "", "성주군", "칠곡군", "영천시", "경주시", "",
+          "", "고령군", "", "경산시", "청도군", ""
+        ]
+      }
+    };
+
+    const map = document.querySelector("#map");
+    const title = document.querySelector("#map-title");
+    const subtitle = document.querySelector("#map-subtitle");
+    const tabs = document.querySelector("#region-tabs");
+    const currentLocationLabel = document.querySelector("#current-location-label");
+    const localSummaryLabel = document.querySelector("#local-summary-label");
+    const localSummaryTotal = document.querySelector("#local-summary-total");
+    const supportButtons = Array.from(document.querySelectorAll(".support"));
+    const supportStorageKey = "minsim-map-support-choice";
+    const participantStorageKey = "vibemap-participant-id";
+    const activeQuestionId = "lunch-jjajang-jjamppong";
+
+    const currentLocation = {
+      province: "경기",
+      city: "수원시"
+    };
+
+    function updateLocalSummary() {
+      const provinceName = currentLocation.province;
+      const cityName = currentLocation.city;
+      const provinceStat = provinceStats[provinceName];
+
+      currentLocationLabel.textContent = provinceName === "서울" || provinceName === "세종"
+        ? `${provinceName} ${cityName}`
+        : `${provinceName}도 ${cityName}`;
+
+      localSummaryLabel.textContent = `${provinceName} 참여`;
+      localSummaryTotal.textContent = provinceStat
+        ? provinceStat.total.toLocaleString()
+        : "0";
+    }
+
+    function setCookie(name, value, days = 365) {
+      const expires = new Date(Date.now() + days * 86400000).toUTCString();
+      document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+    }
+
+    function getCookie(name) {
+      const target = `${name}=`;
+      const match = document.cookie.split("; ").find((row) => row.startsWith(target));
+      return match ? decodeURIComponent(match.slice(target.length)) : null;
+    }
+
+    function getParticipantId() {
+      let participantId = window.localStorage.getItem(participantStorageKey) || getCookie(participantStorageKey);
+      if (!participantId) {
+        participantId = `browser-${crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`}`;
+        window.localStorage.setItem(participantStorageKey, participantId);
+        setCookie(participantStorageKey, participantId);
+      }
+      return participantId;
+    }
+
+    function choiceIdFromLabel(label) {
+      if (label === "짜장면") return "blue";
+      if (label === "짬뽕") return "red";
+      return "gray";
+    }
+
+    async function syncChoiceToApi(choiceLabel) {
+      try {
+        await fetch("/api/choices", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            questionId: activeQuestionId,
+            participantId: getParticipantId(),
+            region: currentLocation.city,
+            period: "7d",
+            choiceId: choiceIdFromLabel(choiceLabel)
+          })
+        });
+      } catch {
+        // 정적 미리보기에서는 API가 없을 수 있으므로 로컬 저장만 유지한다.
+      }
+    }
+
+    function normalizeSupportChoice(choice) {
+      if (choice === "블루 웨이브" || choice === "블루바이브") return "짜장면";
+      if (choice === "레드 웨이브" || choice === "레드바이브") return "짬뽕";
+      if (choice === "관망 중") return "아직 못 정함";
+      return choice;
+    }
+
+    function applyStoredSupportChoice() {
+      const savedChoice = normalizeSupportChoice(window.localStorage.getItem(supportStorageKey) || getCookie(supportStorageKey));
+      document.body.classList.remove("support-blue", "support-red", "support-gray");
+      if (!savedChoice) return;
+
+      supportButtons.forEach((button) => {
+        button.classList.toggle("selected", button.textContent.trim() === savedChoice);
+      });
+
+      if (savedChoice === "짜장면") {
+        document.body.classList.add("support-blue");
+      } else if (savedChoice === "짬뽕") {
+        document.body.classList.add("support-red");
+      } else {
+        document.body.classList.add("support-gray");
+      }
+    }
+
+    function statForName(name, fallbackParty = "gray", index = 0) {
+      if (regions[name]) return regions[name];
+      if (provinceStats[name]) return provinceStats[name];
+      const label = fallbackParty === "blue"
+        ? "짜장면 강세"
+        : fallbackParty === "red"
+          ? "짬뽕 강세"
+          : fallbackParty === "tie"
+            ? "팽팽함"
+            : "선택 적음";
+      return {
+        party: fallbackParty,
+        label,
+        diff: fallbackParty === "tie" ? 2.4 : fallbackParty === "gray" ? 0 : 4.4 + (index % 6),
+        total: 220 + index * 41
+      };
+    }
+
+    function countsFromStat(stat) {
+      const total = stat.total || 0;
+      const undecided = Math.max(0, Math.round(total * (stat.party === "gray" ? 0.58 : 0.16)));
+      const decided = Math.max(0, total - undecided);
+      const gapCount = Math.round(decided * ((stat.diff || 0) / 100));
+      let blue = Math.round((decided + gapCount) / 2);
+      let red = decided - blue;
+
+      if (stat.party === "red") {
+        red = Math.round((decided + gapCount) / 2);
+        blue = decided - red;
+      }
+
+      if (stat.party === "tie") {
+        blue = Math.round(decided / 2);
+        red = decided - blue;
+      }
+
+      if (stat.party === "gray") {
+        blue = Math.round(decided / 2);
+        red = decided - blue;
+      }
+
+      return { blue, red, undecided };
+    }
+
+    function countSummary(stat) {
+      const counts = countsFromStat(stat);
+      return `짜장 ${counts.blue.toLocaleString()} · 짬뽕 ${counts.red.toLocaleString()} · 미정 ${counts.undecided.toLocaleString()}`;
+    }
+
+    function aggregateStats(items) {
+      const totals = items
+        .filter(Boolean)
+        .map((name, index) => {
+          const stat = statForName(name, (provinceStats[name] || regions[name] || {}).party, index);
+          return countsFromStat(stat);
+        })
+        .reduce((sum, counts) => ({
+          blue: sum.blue + counts.blue,
+          red: sum.red + counts.red,
+          undecided: sum.undecided + counts.undecided
+        }), { blue: 0, red: 0, undecided: 0 });
+
+      const total = totals.blue + totals.red + totals.undecided;
+      const decided = Math.max(0, totals.blue + totals.red);
+      const diff = decided > 0 ? Math.abs(totals.blue - totals.red) / decided * 100 : 0;
+      const party = diff <= 3
+        ? "tie"
+        : totals.blue > totals.red
+          ? "blue"
+          : totals.red > totals.blue
+            ? "red"
+            : "gray";
+      const label = party === "blue"
+        ? "짜장면 강세"
+        : party === "red"
+          ? "짬뽕 강세"
+          : party === "tie"
+            ? "팽팽함"
+            : "선택 적음";
+
+      return { party, label, diff, total, counts: totals };
+    }
+
+    function updateSubtitle(name, stat) {
+      subtitle.textContent = stat.party === "gray"
+        ? `${name} · ${stat.label} · ${countSummary(stat)} · 최근 7일 참여 ${stat.total.toLocaleString()}명`
+        : `${name} · ${stat.label} · 선택 차이 ${stat.diff.toFixed(1)}%p · ${countSummary(stat)} · 최근 7일 참여 ${stat.total.toLocaleString()}명`;
+    }
+
+    function updateAggregateSubtitle(name, items) {
+      updateSubtitle(name, aggregateStats(items));
+    }
+
+    function setActiveTab(name) {
+      document.querySelectorAll(".region-tabs .chip").forEach((button) => {
+        button.classList.toggle("active", button.dataset.region === name);
+      });
+    }
+
+    function markSelected(name) {
+      document.querySelectorAll(".tile[data-map-name]").forEach((tile) => {
+        tile.classList.toggle("selected", tile.dataset.mapName === name);
+      });
+    }
+
+    function withCenteredPadding(items, cols) {
+      const rows = [];
+      for (let i = 0; i < items.length; i += cols) {
+        const slice = items.slice(i, i + cols);
+        const filled = slice.filter(Boolean).length;
+        if (filled > 0 && filled < cols) {
+          const missing = cols - filled;
+          const left = Math.floor(missing / 2);
+          const right = missing - left;
+          rows.push(...Array.from({ length: left }, () => ""));
+          rows.push(...slice.filter(Boolean));
+          rows.push(...Array.from({ length: right }, () => ""));
+        } else {
+          rows.push(...slice);
+        }
+      }
+      return rows;
+    }
+
+    function isMobileLayout() {
+      return window.innerWidth <= 720;
+    }
+
+    function renderMap(items, colsClass, cols, resolver, onClick) {
+      const mobile = isMobileLayout();
+      const effectiveCols = mobile && colsClass !== "cols-five" ? 4 : cols;
+      const padded = mobile
+        ? items.filter(Boolean)
+        : withCenteredPadding(items, cols);
+      const compactClass = padded.filter(Boolean).length <= 6 ? " compact-map" : "";
+      map.innerHTML = `<div class="cartogram ${colsClass}${compactClass}"></div>`;
+      const grid = map.querySelector(".cartogram");
+      if (colsClass === "cols-dynamic") {
+        grid.style.setProperty("--dynamic-cols", cols);
+      }
+
+      padded.forEach((name, index) => {
+        const tile = document.createElement("button");
+        tile.type = "button";
+        const row = Math.floor(index / effectiveCols);
+        const offsetClass = row % 2 === 1 ? " offset" : "";
+        const stackClass = row > 0 ? " stacked" : "";
+
+        if (!name) {
+          tile.className = `tile empty${offsetClass}${stackClass}`;
+          grid.appendChild(tile);
+          return;
+        }
+        const stat = resolver(name, index);
+        tile.className = `tile ${stat.party}${offsetClass}${stackClass}`;
+        tile.dataset.mapName = name;
+        tile.textContent = name;
+        tile.addEventListener("click", () => onClick(name, stat));
+        grid.appendChild(tile);
+      });
+    }
+
+    function renderNational() {
+      map.dataset.view = "national";
+      title.textContent = "전국 바이브맵";
+      setActiveTab("전국");
+      renderMap(
+        nationalLayout,
+        "cols-dynamic",
+        7,
+        (name) => statForName(name, (provinceStats[name] || {}).party),
+        (name) => renderRegion(name)
+      );
+      markSelected("");
+      updateAggregateSubtitle("전국", nationalLayout);
+    }
+
+    function renderGyeonggi() {
+      map.dataset.view = "gyeonggi";
+      title.textContent = "경기도 바이브맵";
+      setActiveTab("경기");
+      renderMap(
+        gyeonggiLayout,
+        "cols-9",
+        9,
+        (name) => {
+          if (name === "서울") return provinceStats["서울"];
+          return statForName(name, (regions[name] || {}).party);
+        },
+        (name, stat) => {
+          if (name === "서울") return renderSeoul();
+          markSelected(name);
+          updateSubtitle(name, stat);
+        }
+      );
+      markSelected("");
+      updateAggregateSubtitle("경기", gyeonggiLayout.filter((name) => name && name !== "서울"));
+    }
+
+    function renderSeoul() {
+      map.dataset.view = "seoul";
+      title.textContent = "서울 바이브맵";
+      setActiveTab("서울");
+      renderMap(
+        seoulLayout,
+        "cols-7",
+        7,
+        (name, index) => statForName(name, ["blue", "red", "tie", "gray"][(name.length + index) % 4], index),
+        (name, stat) => {
+          markSelected(name);
+          updateSubtitle(name, stat);
+        }
+      );
+      markSelected("");
+      updateAggregateSubtitle("서울", seoulLayout);
+    }
+
+    function renderGenericRegion(name) {
+      map.dataset.view = "generic";
+      title.textContent = `${name} 바이브맵`;
+      setActiveTab(name);
+      const customLayout = customRegionLayouts[name];
+      const items = customLayout?.items || genericLayouts[name] || [name];
+      const visibleCount = items.filter(Boolean).length;
+      const cols = customLayout?.cols || (visibleCount === 5 ? 3 : visibleCount <= 6 ? Math.max(2, Math.ceil(visibleCount / 2)) : 5);
+      const colsClass = customLayout ? "cols-dynamic" : visibleCount === 5 ? "cols-five" : visibleCount <= 6 ? "cols-dynamic" : "cols-5";
+      renderMap(
+        items,
+        colsClass,
+        cols,
+        (tileName, index) => statForName(tileName, ["blue", "red", "tie", "gray"][(tileName.length + index) % 4], index),
+        (tileName, stat) => {
+          markSelected(tileName);
+          updateSubtitle(tileName, stat);
+        }
+      );
+      markSelected("");
+      updateAggregateSubtitle(name, items);
+    }
+
+    function renderRegion(name) {
+      if (name === "전국") return renderNational();
+      if (name === "경기") return renderGyeonggi();
+      if (name === "서울") return renderSeoul();
+      return renderGenericRegion(name);
+    }
+
+    provinceTabs.forEach((name) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "chip";
+      button.dataset.region = name;
+      button.textContent = name;
+      button.addEventListener("click", () => renderRegion(name));
+      tabs.appendChild(button);
+    });
+
+    document.querySelectorAll(".period-chip").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".period-chip").forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
+      });
+    });
+
+    supportButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const wasSelected = button.classList.contains("selected");
+        supportButtons.forEach((item) => item.classList.remove("selected"));
+
+        if (wasSelected) {
+          button.classList.add("selected");
+          applyStoredSupportChoice();
+          return;
+        }
+
+        const choice = button.textContent.trim();
+
+        button.classList.add("selected");
+        window.localStorage.setItem(supportStorageKey, choice);
+        setCookie(supportStorageKey, choice);
+        applyStoredSupportChoice();
+        syncChoiceToApi(choice);
+      });
+    });
+
+    let resizeTimer;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        const activeRegion = document.querySelector(".region-tabs .chip.active")?.dataset.region || "전국";
+        renderRegion(activeRegion);
+      }, 120);
+    });
+
+    updateLocalSummary();
+    applyStoredSupportChoice();
+    renderNational();
+  </script>
+</body>
+</html>

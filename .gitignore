@@ -1,0 +1,30 @@
+# dependencies
+node_modules/
+
+# environment
+.env
+.env.*
+!.env.example
+
+# logs and local runtime
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# build output
+dist/
+build/
+.vite/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# unrelated exploration docs from earlier brainstorming
+gamja-coin-*.md
+
+# unfinished React scaffold kept locally for reference
+minsimjido-app/
