@@ -719,8 +719,8 @@
       <section class="panel map-panel">
         <div class="map-head">
           <div>
-            <h2 id="map-title">전국 바이브맵</h2>
-            <div class="muted" id="map-subtitle">서울 · 짜장면 강세 · 선택 차이 5.4%p · 최근 7일 참여 8,200명</div>
+            <h2 id="map-title">오늘 점심은 짜장 vs 짬뽕?</h2>
+            <div class="muted" id="map-subtitle">전국 · 짜장면 강세 · 선택 차이 5.4%p · 최근 7일 참여 8,200명</div>
           </div>
         </div>
         <nav class="region-tabs" id="region-tabs" aria-label="지역 선택"></nav>
@@ -1181,7 +1181,7 @@
 
     function renderNational() {
       map.dataset.view = "national";
-      title.textContent = "전국 바이브맵";
+      title.textContent = "오늘 점심은 짜장 vs 짬뽕?";
       setActiveTab("전국");
       renderMap(
         nationalLayout,
@@ -1196,7 +1196,7 @@
 
     function renderGyeonggi() {
       map.dataset.view = "gyeonggi";
-      title.textContent = "경기도 바이브맵";
+      title.textContent = "오늘 점심은 짜장 vs 짬뽕?";
       setActiveTab("경기");
       renderMap(
         gyeonggiLayout,
@@ -1218,7 +1218,7 @@
 
     function renderSeoul() {
       map.dataset.view = "seoul";
-      title.textContent = "서울 바이브맵";
+      title.textContent = "오늘 점심은 짜장 vs 짬뽕?";
       setActiveTab("서울");
       renderMap(
         seoulLayout,
@@ -1236,7 +1236,7 @@
 
     function renderGenericRegion(name) {
       map.dataset.view = "generic";
-      title.textContent = `${name} 바이브맵`;
+      title.textContent = "오늘 점심은 짜장 vs 짬뽕?";
       setActiveTab(name);
       const customLayout = customRegionLayouts[name];
       const items = customLayout?.items || genericLayouts[name] || [name];
