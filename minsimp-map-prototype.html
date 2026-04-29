@@ -625,7 +625,8 @@
       .cols-7 { grid-template-columns: repeat(4, var(--tile-size)); }
       .cols-6 { grid-template-columns: repeat(4, var(--tile-size)); }
       .cols-5 { grid-template-columns: repeat(4, var(--tile-size)); }
-      .cols-dynamic { grid-template-columns: repeat(var(--dynamic-cols, 3), var(--tile-size)); }
+      .cols-mobile { grid-template-columns: repeat(4, var(--tile-size)); }
+      .cols-dynamic { grid-template-columns: repeat(4, var(--tile-size)); }
       .cols-five { grid-template-columns: repeat(3, var(--tile-size)); }
 
       .tile { font-size: 11px; padding: 6px 8px; }
@@ -1145,14 +1146,15 @@
 
     function renderMap(items, colsClass, cols, resolver, onClick) {
       const mobile = isMobileLayout();
-      const effectiveCols = mobile && colsClass !== "cols-five" ? 4 : cols;
+      const effectiveCols = mobile ? 4 : cols;
       const padded = mobile
         ? items.filter(Boolean)
         : withCenteredPadding(items, cols);
       const compactClass = padded.filter(Boolean).length <= 6 ? " compact-map" : "";
-      map.innerHTML = `<div class="cartogram ${colsClass}${compactClass}"></div>`;
+      const effectiveColsClass = mobile ? "cols-mobile" : colsClass;
+      map.innerHTML = `<div class="cartogram ${effectiveColsClass}${compactClass}"></div>`;
       const grid = map.querySelector(".cartogram");
-      if (colsClass === "cols-dynamic") {
+      if (!mobile && colsClass === "cols-dynamic") {
         grid.style.setProperty("--dynamic-cols", cols);
       }
 
