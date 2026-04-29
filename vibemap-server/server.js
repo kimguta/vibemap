@@ -9,6 +9,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(__dirname, "..");
 const dbPath = join(__dirname, "data", "vibemap-db.json");
 const port = Number(process.env.PORT || 8788);
+const host = process.env.HOST || "0.0.0.0";
 let memoryDb = null;
 
 const contentTypes = {
@@ -326,6 +327,7 @@ const server = createServer(async (req, res) => {
   }
 });
 
-server.listen(port, "127.0.0.1", () => {
-  console.log(`Vibemap server ready: http://127.0.0.1:${port}/minsimp-map-prototype.html`);
+server.listen(port, host, () => {
+  const displayHost = host === "0.0.0.0" ? "127.0.0.1" : host;
+  console.log(`Vibemap server ready: http://${displayHost}:${port}/minsimp-map-prototype.html`);
 });
