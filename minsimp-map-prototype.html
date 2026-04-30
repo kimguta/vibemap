@@ -273,6 +273,39 @@
       font-size: 19px;
     }
 
+    .location-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .location-button {
+      flex: 0 0 auto;
+      height: 30px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .location-button:disabled {
+      cursor: wait;
+      opacity: 0.65;
+    }
+
+    .location-status {
+      min-width: 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+      text-align: right;
+    }
+
     .support-buttons {
       display: grid;
       gap: 8px;
@@ -881,7 +914,11 @@
           <h2>내 접속 지역</h2>
           <div class="local-card">
             <strong id="current-location-label">경기도 수원시</strong>
-            <div class="muted">현재 프로토타입은 샘플 위치를 사용합니다.</div>
+            <div class="muted" id="current-location-note">기본 지역으로 표시 중입니다.</div>
+            <div class="location-row">
+              <button class="location-button" id="location-button" type="button">내 위치 확인</button>
+              <div class="location-status" id="location-status" aria-live="polite"></div>
+            </div>
           </div>
           <div class="support-buttons" aria-label="반응 선택">
             <button class="support blue" type="button">짜장면</button>
@@ -1137,6 +1174,9 @@
     const activeRegionLabel = document.querySelector("#active-region-label");
     const tabs = document.querySelector("#region-tabs");
     const currentLocationLabel = document.querySelector("#current-location-label");
+    const currentLocationNote = document.querySelector("#current-location-note");
+    const locationButton = document.querySelector("#location-button");
+    const locationStatus = document.querySelector("#location-status");
     const nationalSummaryTotal = document.querySelector("#national-summary-total");
     const localSummaryLabel = document.querySelector("#local-summary-label");
     const localSummaryTotal = document.querySelector("#local-summary-total");
@@ -1181,8 +1221,29 @@
 
     const currentLocation = {
       province: "경기",
-      city: "수원시"
+      city: "수원시",
+      source: "default"
     };
+
+    const locationCandidates = [
+      { province: "서울", city: "서울", lat: 37.5665, lon: 126.9780 },
+      { province: "부산", city: "부산", lat: 35.1796, lon: 129.0756 },
+      { province: "대구", city: "대구", lat: 35.8714, lon: 128.6014 },
+      { province: "인천", city: "인천", lat: 37.4563, lon: 126.7052 },
+      { province: "광주", city: "광주", lat: 35.1595, lon: 126.8526 },
+      { province: "대전", city: "대전", lat: 36.3504, lon: 127.3845 },
+      { province: "울산", city: "울산", lat: 35.5384, lon: 129.3114 },
+      { province: "세종", city: "세종", lat: 36.4800, lon: 127.2890 },
+      { province: "경기", city: "수원시", lat: 37.2636, lon: 127.0286 },
+      { province: "강원", city: "춘천시", lat: 37.8813, lon: 127.7298 },
+      { province: "충북", city: "청주시", lat: 36.6424, lon: 127.4890 },
+      { province: "충남", city: "천안시", lat: 36.8151, lon: 127.1139 },
+      { province: "전북", city: "전주시", lat: 35.8242, lon: 127.1480 },
+      { province: "전남", city: "목포시", lat: 34.8118, lon: 126.3922 },
+      { province: "경북", city: "안동시", lat: 36.5684, lon: 128.7294 },
+      { province: "경남", city: "창원시", lat: 35.2279, lon: 128.6811 },
+      { province: "제주", city: "제주시", lat: 33.4996, lon: 126.5312 }
+    ];
 
     const regionParentMap = {};
 
@@ -1212,14 +1273,75 @@
       return "아직 선택이 많지 않습니다";
     }
 
+    function formatLocationLabel(provinceName, cityName) {
+      if (provinceName === "서울" || provinceName === "세종" || provinceName === cityName) {
+        return `${provinceName} ${cityName}`;
+      }
+      return `${provinceName}도 ${cityName}`;
+    }
+
+    function distanceScore(lat, lon, candidate) {
+      const latDiff = lat - candidate.lat;
+      const lonDiff = (lon - candidate.lon) * Math.cos(lat * Math.PI / 180);
+      return latDiff * latDiff + lonDiff * lonDiff;
+    }
+
+    function nearestLocation(lat, lon) {
+      return locationCandidates
+        .map((candidate) => ({ ...candidate, score: distanceScore(lat, lon, candidate) }))
+        .sort((a, b) => a.score - b.score)[0];
+    }
+
+    function applyCurrentLocation(location, source = "detected") {
+      currentLocation.province = location.province;
+      currentLocation.city = location.city;
+      currentLocation.source = source;
+      updateLocalSummary();
+      fetchSummaryFromApi();
+      refreshActiveView();
+    }
+
+    function setLocationStatus(message = "") {
+      locationStatus.textContent = message;
+    }
+
+    function requestCurrentLocation() {
+      if (!navigator.geolocation) {
+        currentLocationNote.textContent = "이 브라우저에서는 위치 확인을 지원하지 않습니다.";
+        setLocationStatus("");
+        return;
+      }
+
+      locationButton.disabled = true;
+      locationButton.textContent = "확인 중";
+      setLocationStatus("권한 확인 중");
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const matched = nearestLocation(position.coords.latitude, position.coords.longitude);
+          applyCurrentLocation(matched, "detected");
+          currentLocationNote.textContent = "브라우저 위치 기준으로 대략 표시 중입니다.";
+          setLocationStatus("반영됨");
+          locationButton.disabled = false;
+          locationButton.textContent = "다시 확인";
+          window.setTimeout(() => setLocationStatus(""), 1800);
+        },
+        () => {
+          currentLocationNote.textContent = "위치 권한이 꺼져 있어 기본 지역으로 표시 중입니다.";
+          setLocationStatus("");
+          locationButton.disabled = false;
+          locationButton.textContent = "내 위치 확인";
+        },
+        { enableHighAccuracy: false, timeout: 7000, maximumAge: 600000 }
+      );
+    }
+
     function updateLocalSummary() {
       const provinceName = currentLocation.province;
       const cityName = currentLocation.city;
       const provinceStat = provinceStats[provinceName];
 
-      currentLocationLabel.textContent = provinceName === "서울" || provinceName === "세종"
-        ? `${provinceName} ${cityName}`
-        : `${provinceName}도 ${cityName}`;
+      currentLocationLabel.textContent = formatLocationLabel(provinceName, cityName);
 
       nationalSummaryTotal.textContent = storedChoiceLabel() ? "1" : "0";
       localSummaryLabel.textContent = `${provinceName} 흐름`;
@@ -1945,6 +2067,7 @@
     reactionInput.addEventListener("input", updateReactionCount);
 
     shareButton.addEventListener("click", shareCurrentView);
+    locationButton.addEventListener("click", requestCurrentLocation);
 
     supportButtons.forEach((button) => {
       button.addEventListener("click", () => {
