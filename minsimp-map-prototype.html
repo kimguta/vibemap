@@ -442,6 +442,17 @@
       box-shadow: 0 0 0 3px rgba(191, 208, 255, 0.38);
     }
 
+    .reaction-count {
+      color: var(--muted);
+      font-size: 11px;
+      text-align: right;
+    }
+
+    .reaction-count.near-limit {
+      color: var(--red);
+      font-weight: 600;
+    }
+
     .reaction-submit {
       width: 100%;
       height: 36px;
@@ -495,6 +506,40 @@
       justify-content: space-between;
       gap: 14px;
       padding: 18px 20px 10px;
+    }
+
+    .map-actions {
+      display: grid;
+      justify-items: end;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .share-button {
+      height: 32px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--ink);
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+      transition: background 120ms ease, transform 120ms ease;
+    }
+
+    .share-button:hover {
+      background: var(--accent);
+    }
+
+    .share-button:active {
+      transform: translateY(1px);
+    }
+
+    .share-status {
+      min-height: 14px;
+      color: var(--muted);
+      font-size: 11px;
     }
 
     .map-head h2 {
@@ -759,7 +804,7 @@
         <section class="section">
           <h3>오늘의 요약</h3>
           <div class="metric-list">
-            <div class="metric"><span>전국 참여</span><strong>84,219</strong></div>
+            <div class="metric"><span>전국 참여</span><strong id="national-summary-total">84,219</strong></div>
             <div class="metric"><span id="local-summary-label">경기 참여</span><strong id="local-summary-total">18,440</strong></div>
             <div class="metric"><span>팽팽한 지역</span><strong>9곳</strong></div>
             <div class="metric"><span>참여 부족</span><strong>4곳</strong></div>
@@ -786,6 +831,10 @@
           <div>
             <h2 id="map-title">오늘 점심은 짜장 vs 짬뽕?</h2>
             <div class="muted" id="map-subtitle">전국 · 짜장면 강세 · 선택 차이 5.4%p · 최근 7일 참여 8,200명</div>
+          </div>
+          <div class="map-actions">
+            <button class="share-button" id="share-button" type="button">공유</button>
+            <div class="share-status" id="share-status" aria-live="polite"></div>
           </div>
         </div>
         <nav class="region-tabs" id="region-tabs" aria-label="지역 선택"></nav>
@@ -817,6 +866,7 @@
           </div>
           <form class="reaction-form" id="reaction-form">
             <input class="reaction-input" id="reaction-input" maxlength="36" placeholder="우리 동네 왜 짬뽕이냐" autocomplete="off" />
+            <div class="reaction-count" id="reaction-count">0 / 36</div>
             <button class="reaction-submit" type="submit">남기기</button>
           </form>
           <div class="reaction-list" id="reaction-list" aria-live="polite"></div>
@@ -991,17 +1041,22 @@
     const subtitle = document.querySelector("#map-subtitle");
     const tabs = document.querySelector("#region-tabs");
     const currentLocationLabel = document.querySelector("#current-location-label");
+    const nationalSummaryTotal = document.querySelector("#national-summary-total");
     const localSummaryLabel = document.querySelector("#local-summary-label");
     const localSummaryTotal = document.querySelector("#local-summary-total");
     const supportButtons = Array.from(document.querySelectorAll(".support"));
     const reactionForm = document.querySelector("#reaction-form");
     const reactionInput = document.querySelector("#reaction-input");
+    const reactionCount = document.querySelector("#reaction-count");
     const reactionList = document.querySelector("#reaction-list");
+    const shareButton = document.querySelector("#share-button");
+    const shareStatus = document.querySelector("#share-status");
     const supportStorageKey = "minsim-map-support-choice";
     const participantStorageKey = "vibemap-participant-id";
     const reactionStorageKey = "picked-short-reactions";
     const activeQuestionId = "lunch-jjajang-jjamppong";
     let activeScopeName = "전국";
+    let activeChoiceId = null;
 
     const defaultReactions = [
       { text: "우리 동네는 오늘 짜장 분위기네", region: "전국", choice: "짜장면", createdAt: "샘플" },
@@ -1018,14 +1073,17 @@
       const provinceName = currentLocation.province;
       const cityName = currentLocation.city;
       const provinceStat = provinceStats[provinceName];
+      const selectedChoice = storedChoiceLabel();
 
       currentLocationLabel.textContent = provinceName === "서울" || provinceName === "세종"
         ? `${provinceName} ${cityName}`
         : `${provinceName}도 ${cityName}`;
 
+      const nationalTotal = Object.values(provinceStats).reduce((sum, stat) => sum + stat.total, 0) + (selectedChoice ? 1 : 0);
+      nationalSummaryTotal.textContent = nationalTotal.toLocaleString();
       localSummaryLabel.textContent = `${provinceName} 참여`;
       localSummaryTotal.textContent = provinceStat
-        ? provinceStat.total.toLocaleString()
+        ? (provinceStat.total + (selectedChoice ? 1 : 0)).toLocaleString()
         : "0";
     }
 
@@ -1050,8 +1108,18 @@
       return participantId;
     }
 
+    function storedChoiceLabel() {
+      return normalizeSupportChoice(window.localStorage.getItem(supportStorageKey) || getCookie(supportStorageKey));
+    }
+
     function currentChoiceLabel() {
-      return normalizeSupportChoice(window.localStorage.getItem(supportStorageKey) || getCookie(supportStorageKey)) || "선택 전";
+      return storedChoiceLabel() || "선택 전";
+    }
+
+    function updateReactionCount() {
+      const length = reactionInput.value.length;
+      reactionCount.textContent = `${length} / ${reactionInput.maxLength}`;
+      reactionCount.classList.toggle("near-limit", length >= reactionInput.maxLength - 6);
     }
 
     function loadReactions() {
@@ -1109,6 +1177,43 @@
       renderReactions();
     }
 
+    function shareText() {
+      return `${title.textContent}\n${subtitle.textContent}\n${window.location.href}`;
+    }
+
+    async function shareCurrentView() {
+      const payload = {
+        title: "picked | 핃",
+        text: shareText(),
+        url: window.location.href
+      };
+
+      try {
+        if (navigator.share) {
+          await navigator.share(payload);
+          shareStatus.textContent = "공유 준비 완료";
+        } else if (navigator.clipboard) {
+          await navigator.clipboard.writeText(shareText());
+          shareStatus.textContent = "링크 복사됨";
+        } else {
+          shareStatus.textContent = "주소를 복사해 공유해 주세요";
+        }
+      } catch {
+        shareStatus.textContent = "공유 취소됨";
+      }
+
+      window.clearTimeout(shareCurrentView.timer);
+      shareCurrentView.timer = window.setTimeout(() => {
+        shareStatus.textContent = "";
+      }, 1800);
+    }
+
+    function refreshActiveView() {
+      const activeRegion = document.querySelector(".region-tabs .chip.active")?.dataset.region || "전국";
+      updateLocalSummary();
+      renderRegion(activeRegion);
+    }
+
     function choiceIdFromLabel(label) {
       if (label === "짜장면") return "blue";
       if (label === "짬뽕") return "red";
@@ -1143,6 +1248,7 @@
     function applyStoredSupportChoice() {
       const savedChoice = normalizeSupportChoice(window.localStorage.getItem(supportStorageKey) || getCookie(supportStorageKey));
       document.body.classList.remove("support-blue", "support-red", "support-gray");
+      activeChoiceId = savedChoice ? choiceIdFromLabel(savedChoice) : null;
       if (!savedChoice) return;
 
       supportButtons.forEach((button) => {
@@ -1176,7 +1282,27 @@
       };
     }
 
-    function countsFromStat(stat) {
+    function choiceDeltaForName(name) {
+      if (!activeChoiceId) return null;
+      const provinceName = currentLocation.province;
+      const cityName = currentLocation.city;
+      const appliesToCurrentCity = name === cityName;
+      const appliesToCurrentProvince = name === provinceName;
+      if (!appliesToCurrentCity && !appliesToCurrentProvince) return null;
+      return activeChoiceId;
+    }
+
+    function applyChoiceDelta(counts, choiceId) {
+      if (!choiceId) return counts;
+      return {
+        blue: counts.blue + (choiceId === "blue" ? 1 : 0),
+        red: counts.red + (choiceId === "red" ? 1 : 0),
+        undecided: counts.undecided + (choiceId === "gray" ? 1 : 0)
+      };
+    }
+
+    function countsFromStat(stat, name = "") {
+      if (stat.counts) return stat.counts;
       const total = stat.total || 0;
       const undecided = Math.max(0, Math.round(total * (stat.party === "gray" ? 0.58 : 0.16)));
       const decided = Math.max(0, total - undecided);
@@ -1199,11 +1325,11 @@
         red = decided - blue;
       }
 
-      return { blue, red, undecided };
+      return applyChoiceDelta({ blue, red, undecided }, choiceDeltaForName(name));
     }
 
-    function countSummary(stat) {
-      const counts = countsFromStat(stat);
+    function countSummary(stat, name) {
+      const counts = countsFromStat(stat, name);
       return `짜장 ${counts.blue.toLocaleString()} · 짬뽕 ${counts.red.toLocaleString()} · 미정 ${counts.undecided.toLocaleString()}`;
     }
 
@@ -1212,7 +1338,7 @@
         .filter(Boolean)
         .map((name, index) => {
           const stat = statForName(name, (provinceStats[name] || regions[name] || {}).party, index);
-          return countsFromStat(stat);
+          return countsFromStat(stat, name);
         })
         .reduce((sum, counts) => ({
           blue: sum.blue + counts.blue,
@@ -1243,9 +1369,10 @@
 
     function updateSubtitle(name, stat) {
       activeScopeName = name;
+      const total = stat.total + (choiceDeltaForName(name) ? 1 : 0);
       subtitle.textContent = stat.party === "gray"
-        ? `${name} · ${stat.label} · ${countSummary(stat)} · 최근 7일 참여 ${stat.total.toLocaleString()}명`
-        : `${name} · ${stat.label} · 선택 차이 ${stat.diff.toFixed(1)}%p · ${countSummary(stat)} · 최근 7일 참여 ${stat.total.toLocaleString()}명`;
+        ? `${name} · ${stat.label} · ${countSummary(stat, name)} · 최근 7일 참여 ${total.toLocaleString()}명`
+        : `${name} · ${stat.label} · 선택 차이 ${stat.diff.toFixed(1)}%p · ${countSummary(stat, name)} · 최근 7일 참여 ${total.toLocaleString()}명`;
     }
 
     function updateAggregateSubtitle(name, items) {
@@ -1428,7 +1555,12 @@
       event.preventDefault();
       addReaction(reactionInput.value);
       reactionInput.value = "";
+      updateReactionCount();
     });
+
+    reactionInput.addEventListener("input", updateReactionCount);
+
+    shareButton.addEventListener("click", shareCurrentView);
 
     supportButtons.forEach((button) => {
       button.addEventListener("click", () => {
@@ -1438,15 +1570,18 @@
         if (wasSelected) {
           button.classList.add("selected");
           applyStoredSupportChoice();
+          refreshActiveView();
           return;
         }
 
         const choice = button.textContent.trim();
 
         button.classList.add("selected");
+        activeChoiceId = choiceIdFromLabel(choice);
         window.localStorage.setItem(supportStorageKey, choice);
         setCookie(supportStorageKey, choice);
         applyStoredSupportChoice();
+        refreshActiveView();
         syncChoiceToApi(choice);
       });
     });
@@ -1464,6 +1599,7 @@
     applyStoredSupportChoice();
     renderNational();
     renderReactions();
+    updateReactionCount();
   </script>
 </body>
 </html>
