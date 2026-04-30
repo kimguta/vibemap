@@ -505,8 +505,38 @@
     .map-panel {
       display: grid;
       grid-template-rows: auto auto 1fr;
+      position: relative;
       min-height: 0;
       overflow: hidden;
+    }
+
+    .active-region-badge {
+      position: absolute;
+      left: 18px;
+      bottom: 16px;
+      z-index: 3;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      max-width: calc(100% - 36px);
+      min-height: 34px;
+      padding: 0 12px;
+      border: 1px solid rgba(216, 225, 238, 0.95);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.86);
+      color: var(--ink);
+      backdrop-filter: blur(12px);
+      font-size: 12px;
+    }
+
+    .active-region-badge span {
+      color: var(--muted);
+    }
+
+    .active-region-badge strong {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .map-head {
@@ -698,6 +728,12 @@
         order: 1;
       }
 
+      .active-region-badge {
+        position: static;
+        width: fit-content;
+        margin: 0 12px 12px;
+      }
+
       .right-rail {
         order: 3;
       }
@@ -849,6 +885,10 @@
         <nav class="region-tabs" id="region-tabs" aria-label="지역 선택"></nav>
         <div class="map-body">
           <div id="map"></div>
+        </div>
+        <div class="active-region-badge" aria-live="polite">
+          <span>현재 보는 지역</span>
+          <strong id="active-region-label">전국</strong>
         </div>
       </section>
 
@@ -1050,6 +1090,7 @@
     const map = document.querySelector("#map");
     const title = document.querySelector("#map-title");
     const subtitle = document.querySelector("#map-subtitle");
+    const activeRegionLabel = document.querySelector("#active-region-label");
     const tabs = document.querySelector("#region-tabs");
     const currentLocationLabel = document.querySelector("#current-location-label");
     const nationalSummaryTotal = document.querySelector("#national-summary-total");
@@ -1380,6 +1421,7 @@
 
     function updateSubtitle(name, stat) {
       activeScopeName = name;
+      activeRegionLabel.textContent = name;
       const total = stat.total + (choiceDeltaForName(name) ? 1 : 0);
       subtitle.textContent = stat.party === "gray"
         ? `${name} · ${stat.label} · ${countSummary(stat, name)} · 최근 7일 참여 ${total.toLocaleString()}명`
