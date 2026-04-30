@@ -14,8 +14,8 @@
       --line: #d7deea;
       --ink: #162235;
       --muted: #6e7c93;
-      --blue: #3f2518;
-      --red: #df5531;
+      --blue: #24140f;
+      --red: #c1121f;
       --tie: #8a6f58;
       --gray: #8e99ac;
       --accent: #edf3ff;
@@ -39,24 +39,32 @@
       transition: background 180ms ease;
     }
 
+    body.is-loading .app {
+      opacity: 0;
+    }
+
+    body.is-loading .app {
+      pointer-events: none;
+    }
+
     body.support-blue {
       background:
-        radial-gradient(circle at top left, rgba(63, 37, 24, 0.2), transparent 32%),
-        radial-gradient(circle at top right, rgba(223, 85, 49, 0.06), transparent 24%),
+        radial-gradient(circle at top left, rgba(36, 20, 15, 0.22), transparent 32%),
+        radial-gradient(circle at top right, rgba(193, 18, 31, 0.06), transparent 24%),
         linear-gradient(180deg, #f8f4ef 0%, #e9ded4 100%);
     }
 
     body.support-red {
       background:
-        radial-gradient(circle at top left, rgba(63, 37, 24, 0.06), transparent 28%),
-        radial-gradient(circle at top right, rgba(223, 85, 49, 0.17), transparent 30%),
+        radial-gradient(circle at top left, rgba(36, 20, 15, 0.06), transparent 28%),
+        radial-gradient(circle at top right, rgba(193, 18, 31, 0.18), transparent 30%),
         linear-gradient(180deg, #fff8f4 0%, #ffe9df 100%);
     }
 
     body.support-gray {
       background:
-        radial-gradient(circle at top left, rgba(63, 37, 24, 0.05), transparent 26%),
-        radial-gradient(circle at top right, rgba(223, 85, 49, 0.05), transparent 24%),
+        radial-gradient(circle at top left, rgba(36, 20, 15, 0.05), transparent 26%),
+        radial-gradient(circle at top right, rgba(193, 18, 31, 0.05), transparent 24%),
         linear-gradient(180deg, #f7f9fb 0%, #eef2f7 100%);
     }
 
@@ -340,7 +348,7 @@
         #4a2c1d 0%,
         #76503a 34%,
         #a8633f 66%,
-        #df5531 100%
+        #c1121f 100%
       );
     }
     .dot.gray { background: var(--gray); }
@@ -369,7 +377,7 @@
 
     .banner-card.featured {
       background:
-        linear-gradient(135deg, rgba(41, 98, 255, 0.1), rgba(223, 77, 99, 0.08)),
+        linear-gradient(135deg, rgba(36, 20, 15, 0.09), rgba(193, 18, 31, 0.08)),
         rgba(255, 255, 255, 0.82);
     }
 
@@ -686,7 +694,7 @@
         #4a2c1d 0%,
         #76503a 36%,
         #a8633f 64%,
-        #df5531 100%
+        #c1121f 100%
       );
       color: #fff;
     }
@@ -724,8 +732,9 @@
 
     @media (max-width: 980px) {
       header {
-        align-items: flex-start;
-        flex-direction: column;
+        align-items: center;
+        flex-direction: row;
+        flex-wrap: wrap;
       }
 
       main {
@@ -753,13 +762,37 @@
 
     @media (max-width: 720px) {
       :root {
-        --tile-size: 58px;
+        --tile-size: 62px;
         --tile-gap-x: 4px;
       }
 
+      header {
+        padding: 8px 12px;
+      }
+
+      .period-tabs {
+        display: none;
+      }
+
+      main {
+        gap: 10px;
+        padding: 10px;
+      }
+
       .map-body {
-        padding: 4px 8px 12px;
-        place-items: start center;
+        min-height: 58vh;
+        padding: 6px 6px 10px;
+        place-items: center;
+      }
+
+      .map-head {
+        align-items: center;
+        gap: 8px;
+        padding-top: 12px;
+      }
+
+      .map-actions {
+        min-width: 56px;
       }
 
       .map-head,
@@ -781,7 +814,7 @@
         grid-template-columns: 1fr;
       }
 
-      #map { padding: 4px; }
+      #map { padding: 2px; }
 
       .cartogram { padding-right: 24px; }
       .cartogram.compact-map { padding-left: 12px; padding-right: 12px; }
@@ -814,7 +847,7 @@
     }
   </style>
 </head>
-<body>
+<body class="is-loading">
   <svg aria-hidden="true" focusable="false">
     <defs>
       <clipPath id="rounded-hex" clipPathUnits="objectBoundingBox">
@@ -907,14 +940,13 @@
         <aside class="panel banner-panel" aria-label="제휴 및 리포트 영역">
           <div class="banner-card featured">
             <div class="banner-eyebrow">TODAY BRIEF</div>
-            <h3 class="banner-title">점심 선택이 갈린 지역</h3>
-            <p class="banner-copy">최근 7일 기준, 선택이 팽팽해진 지역을 추적합니다.</p>
-            <div class="banner-stat"><span>미정 증가</span><strong>+12%</strong></div>
+            <h3 class="banner-title" id="brief-title">오늘 점심 선택이 가장 팽팽한 지역</h3>
+            <p class="banner-copy" id="brief-copy">지역을 선택하면 짜장과 짬뽕 흐름을 바로 볼 수 있습니다.</p>
+            <div class="banner-stat"><span id="brief-stat-label">선택 차이</span><strong id="brief-stat-value">-</strong></div>
           </div>
 
           <div class="banner-card">
             <div class="banner-eyebrow">SPONSOR</div>
-            <h3 class="banner-title">지역 선택 리포트</h3>
             <p class="banner-copy">브랜드, 매장, 지역 단체와 연결할 수 있는 제휴 배너 자리입니다.</p>
           </div>
         </aside>
@@ -1119,9 +1151,14 @@
     const reactionList = document.querySelector("#reaction-list");
     const shareButton = document.querySelector("#share-button");
     const shareStatus = document.querySelector("#share-status");
+    const briefTitle = document.querySelector("#brief-title");
+    const briefCopy = document.querySelector("#brief-copy");
+    const briefStatLabel = document.querySelector("#brief-stat-label");
+    const briefStatValue = document.querySelector("#brief-stat-value");
     const supportStorageKey = "minsim-map-support-choice";
     const participantStorageKey = "vibemap-participant-id";
     const reactionStorageKey = "picked-short-reactions";
+    const selectedRegionStorageKey = "picked-selected-region";
     const activeQuestionId = "lunch-jjajang-jjamppong";
     const choiceCooldownMs = 3000;
     const reactionCooldownMs = 30000;
@@ -1131,6 +1168,8 @@
     let activeChoiceId = null;
     let remoteReactions = null;
     let reactionCooldownTimer = null;
+    let selectedRegionName = window.localStorage.getItem(selectedRegionStorageKey) || "전국";
+    let selectedRegionStat = null;
 
     const defaultReactions = [
       { text: "우리 동네는 오늘 짜장 분위기네", region: "전국", choice: "짜장면", createdAt: "샘플" },
@@ -1142,6 +1181,34 @@
       province: "경기",
       city: "수원시"
     };
+
+    const regionParentMap = {};
+
+    function rememberParent(parentName, names) {
+      names.filter(Boolean).forEach((name) => {
+        if (name !== parentName && !regionParentMap[name]) {
+          regionParentMap[name] = parentName;
+        }
+      });
+    }
+
+    rememberParent("경기", gyeonggiLayout.filter((name) => name !== "서울"));
+    rememberParent("서울", seoulLayout);
+    Object.entries(genericLayouts).forEach(([parentName, names]) => rememberParent(parentName, names));
+    Object.entries(customRegionLayouts).forEach(([parentName, layout]) => rememberParent(parentName, layout.items));
+
+    function displayRegionName(name) {
+      if (!name || name === "전국") return "전국";
+      const parentName = regionParentMap[name];
+      return parentName && parentName !== name ? `${parentName} ${name}` : name;
+    }
+
+    function choiceToneLabel(party) {
+      if (party === "blue") return "짜장면이 우세합니다";
+      if (party === "red") return "짬뽕이 우세합니다";
+      if (party === "tie") return "짜장과 짬뽕이 팽팽합니다";
+      return "아직 선택이 많지 않습니다";
+    }
 
     function updateLocalSummary() {
       const provinceName = currentLocation.province;
@@ -1165,14 +1232,20 @@
       try {
         const response = await fetch(`/api/summary?questionId=${encodeURIComponent(activeQuestionId)}&period=7d&scopeRegion=${encodeURIComponent(currentLocation.province)}`);
         const payload = await response.json();
-        if (!payload.ok || !payload.data) return;
+        if (!payload.ok || !payload.data) return false;
         nationalSummaryTotal.textContent = Number(payload.data.nationalTotal || 0).toLocaleString();
-        localSummaryLabel.textContent = payload.data.localLabel || `${currentLocation.province} 참여`;
-        localSummaryTotal.textContent = Number(payload.data.localTotal || 0).toLocaleString();
+        if (selectedRegionStat) {
+          updateSelectedSummary(selectedRegionName, selectedRegionStat);
+        } else {
+          localSummaryLabel.textContent = payload.data.localLabel || `${currentLocation.province} 참여`;
+          localSummaryTotal.textContent = Number(payload.data.localTotal || 0).toLocaleString();
+        }
         closeRegionTotal.textContent = `${Number(payload.data.closeRegionsCount || 0).toLocaleString()}곳`;
         lowVolumeTotal.textContent = `${Number(payload.data.lowVolumeRegionsCount || 0).toLocaleString()}곳`;
+        return true;
       } catch {
         // 정적 미리보기에서는 샘플 요약을 그대로 쓴다.
+        return false;
       }
     }
 
@@ -1285,6 +1358,12 @@
       return `${Math.floor(hours / 24)}일 전`;
     }
 
+    function reactionRegionName(region) {
+      if (!region) return displayRegionName(activeScopeName);
+      if (String(region).includes(" ")) return region;
+      return displayRegionName(region);
+    }
+
     function renderReactions() {
       reactionList.innerHTML = "";
       loadReactions().slice(0, 6).forEach((reaction) => {
@@ -1295,7 +1374,7 @@
         text.className = "reaction-text";
         meta.className = "reaction-meta";
         text.textContent = reaction.text;
-        meta.textContent = `${reaction.region} · ${reaction.choice} · ${formatReactionTime(reaction.createdAt)}`;
+        meta.textContent = `${reactionRegionName(reaction.region)} · ${reaction.choice} · ${formatReactionTime(reaction.createdAt)}`;
         item.append(text, meta);
         reactionList.appendChild(item);
       });
@@ -1320,7 +1399,7 @@
           body: JSON.stringify({
             questionId: activeQuestionId,
             participantId: getParticipantId(),
-            region: activeScopeName,
+            region: displayRegionName(activeScopeName),
             choice: currentChoiceLabel(),
             text: cleanText
           })
@@ -1342,7 +1421,7 @@
       const reactions = loadReactions().filter((reaction) => reaction.createdAt !== "샘플");
       reactions.unshift({
         text: cleanText,
-        region: activeScopeName,
+        region: displayRegionName(activeScopeName),
         choice: currentChoiceLabel(),
         createdAt: new Date().toISOString()
       });
@@ -1352,7 +1431,9 @@
     }
 
     function shareText() {
-      return `${title.textContent}\n${subtitle.textContent}\n${window.location.href}`;
+      const regionName = displayRegionName(activeScopeName);
+      const stat = selectedRegionStat || statForName(activeScopeName);
+      return `오늘 점심은 짜장 vs 짬뽕? 현재 ${regionName}은 ${choiceToneLabel(stat.party)}!\n${window.location.href}`;
     }
 
     async function shareCurrentView() {
@@ -1365,7 +1446,7 @@
       try {
         if (navigator.share) {
           await navigator.share(payload);
-          shareStatus.textContent = "공유 준비 완료";
+          shareStatus.textContent = "공유 완료";
         } else if (navigator.clipboard) {
           await navigator.clipboard.writeText(shareText());
           shareStatus.textContent = "링크 복사됨";
@@ -1384,9 +1465,16 @@
 
     function refreshActiveView() {
       const activeRegion = document.querySelector(".region-tabs .chip.active")?.dataset.region || "전국";
-      updateLocalSummary();
-      fetchSummaryFromApi();
+      const previousSelectedRegion = selectedRegionName;
       renderRegion(activeRegion);
+      if (previousSelectedRegion !== activeRegion && previousSelectedRegion !== "전국") {
+        const stat = statForName(previousSelectedRegion, (regions[previousSelectedRegion] || provinceStats[previousSelectedRegion] || {}).party);
+        markSelected(previousSelectedRegion);
+        updateSubtitle(previousSelectedRegion, stat);
+      }
+      updateLocalSummary();
+      if (selectedRegionStat) updateSelectedSummary(selectedRegionName, selectedRegionStat);
+      fetchSummaryFromApi();
     }
 
     function choiceIdFromLabel(label) {
@@ -1478,7 +1566,9 @@
       const cityName = currentLocation.city;
       const appliesToCurrentCity = name === cityName;
       const appliesToCurrentProvince = name === provinceName;
-      if (!appliesToCurrentCity && !appliesToCurrentProvince) return null;
+      const appliesToSelectedRegion = name === selectedRegionName;
+      const appliesToNational = name === "전국";
+      if (!appliesToCurrentCity && !appliesToCurrentProvince && !appliesToSelectedRegion && !appliesToNational) return null;
       return activeChoiceId;
     }
 
@@ -1492,7 +1582,7 @@
     }
 
     function countsFromStat(stat, name = "") {
-      if (stat.counts) return stat.counts;
+      if (stat.counts) return applyChoiceDelta(stat.counts, choiceDeltaForName(name));
       const total = stat.total || 0;
       const undecided = Math.max(0, Math.round(total * (stat.party === "gray" ? 0.58 : 0.16)));
       const decided = Math.max(0, total - undecided);
@@ -1521,6 +1611,12 @@
     function countSummary(stat, name) {
       const counts = countsFromStat(stat, name);
       return `짜장 ${counts.blue.toLocaleString()} · 짬뽕 ${counts.red.toLocaleString()} · 미정 ${counts.undecided.toLocaleString()}`;
+    }
+
+    function updateSelectedSummary(name, stat) {
+      const total = stat.total + (choiceDeltaForName(name) ? 1 : 0);
+      localSummaryLabel.textContent = `${displayRegionName(name)} 참여`;
+      localSummaryTotal.textContent = total.toLocaleString();
     }
 
     function aggregateStats(items) {
@@ -1557,13 +1653,44 @@
       return { party, label, diff, total, counts: totals };
     }
 
+    function updateTodayBrief(name, stat) {
+      const counts = countsFromStat(stat, name);
+      const decided = counts.blue + counts.red;
+      const bluePct = decided > 0 ? counts.blue / decided * 100 : 0;
+      const redPct = decided > 0 ? counts.red / decided * 100 : 0;
+      const diff = Math.abs(bluePct - redPct);
+      const regionName = displayRegionName(name);
+      const leadingText = stat.party === "blue"
+        ? "짜장면 쪽으로 기울었습니다"
+        : stat.party === "red"
+          ? "짬뽕 쪽으로 기울었습니다"
+          : stat.party === "tie"
+            ? "거의 반반으로 나뉘고 있습니다"
+            : "아직 선택이 더 필요합니다";
+
+      briefTitle.textContent = stat.party === "tie"
+        ? "오늘 점심 선택이 가장 팽팽한 지역"
+        : `${regionName} 선택 흐름`;
+      briefCopy.textContent = decided > 0
+        ? `${regionName}은 짜장 ${bluePct.toFixed(0)}%, 짬뽕 ${redPct.toFixed(0)}%로 ${leadingText}.`
+        : `${regionName}은 아직 충분한 선택이 모이지 않았습니다.`;
+      briefStatLabel.textContent = "선택 차이";
+      briefStatValue.textContent = decided > 0 ? `${diff.toFixed(1)}%p` : "-";
+    }
+
     function updateSubtitle(name, stat) {
       activeScopeName = name;
-      activeRegionLabel.textContent = name;
+      selectedRegionName = name;
+      selectedRegionStat = stat;
+      window.localStorage.setItem(selectedRegionStorageKey, name);
+      const regionName = displayRegionName(name);
+      activeRegionLabel.textContent = regionName;
       const total = stat.total + (choiceDeltaForName(name) ? 1 : 0);
       subtitle.textContent = stat.party === "gray"
-        ? `${name} · ${stat.label} · ${countSummary(stat, name)} · 최근 7일 참여 ${total.toLocaleString()}명`
-        : `${name} · ${stat.label} · 선택 차이 ${stat.diff.toFixed(1)}%p · ${countSummary(stat, name)} · 최근 7일 참여 ${total.toLocaleString()}명`;
+        ? `${regionName} · ${stat.label} · ${countSummary(stat, name)} · 최근 7일 참여 ${total.toLocaleString()}명`
+        : `${regionName} · ${stat.label} · 선택 차이 ${stat.diff.toFixed(1)}%p · ${countSummary(stat, name)} · 최근 7일 참여 ${total.toLocaleString()}명`;
+      updateSelectedSummary(name, stat);
+      updateTodayBrief(name, stat);
     }
 
     function updateAggregateSubtitle(name, items) {
@@ -1633,6 +1760,7 @@
         }
         const stat = resolver(name, index);
         tile.className = `tile ${stat.party}${offsetClass}${stackClass}`;
+        tile.classList.toggle("selected", name === selectedRegionName);
         tile.dataset.mapName = name;
         tile.textContent = name;
         tile.addEventListener("click", () => onClick(name, stat));
@@ -1725,6 +1853,18 @@
       return renderGenericRegion(name);
     }
 
+    function renderSavedRegion() {
+      const savedRegion = selectedRegionName || "전국";
+      const parentRegion = regionParentMap[savedRegion];
+      const initialRegion = parentRegion || savedRegion;
+      renderRegion(provinceTabs.includes(initialRegion) ? initialRegion : "전국");
+      if (parentRegion) {
+        const stat = statForName(savedRegion, (regions[savedRegion] || {}).party);
+        markSelected(savedRegion);
+        updateSubtitle(savedRegion, stat);
+      }
+    }
+
     provinceTabs.forEach((name) => {
       const button = document.createElement("button");
       button.type = "button";
@@ -1786,14 +1926,25 @@
       }, 120);
     });
 
-    updateLocalSummary();
-    fetchSummaryFromApi();
-    applyStoredSupportChoice();
-    renderNational();
-    renderReactions();
-    fetchReactionsFromApi();
-    updateReactionCount();
-    updateReactionCooldown();
+    async function initializePage() {
+      applyStoredSupportChoice();
+      renderSavedRegion();
+      renderReactions();
+      updateReactionCount();
+      updateReactionCooldown();
+      const summaryLoaded = await Promise.race([
+        fetchSummaryFromApi(),
+        new Promise((resolve) => window.setTimeout(() => resolve(false), 1200))
+      ]);
+      if (!summaryLoaded) {
+        updateLocalSummary();
+        if (selectedRegionStat) updateSelectedSummary(selectedRegionName, selectedRegionStat);
+      }
+      document.body.classList.remove("is-loading");
+      fetchReactionsFromApi();
+    }
+
+    initializePage();
   </script>
 </body>
 </html>

@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "node --check server.js && node scripts/check-inline-script.mjs",
     "start": "node server.js"
   }
 }
