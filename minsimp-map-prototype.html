@@ -1624,6 +1624,7 @@
             questionId: activeQuestionId,
             participantId: getParticipantId(),
             region: currentLocation.city,
+            parentRegion: currentLocation.province,
             period: "7d",
             choiceId: choiceIdFromLabel(choiceLabel)
           })
@@ -1631,6 +1632,14 @@
         const payload = await response.json();
         if (!payload.ok && payload.error?.message) {
           shareStatus.textContent = payload.error.message;
+          return;
+        }
+        if (payload.ok) {
+          remoteStatsByName.clear();
+          const activeRegion = document.querySelector(".region-tabs .chip.active")?.dataset.region || "전국";
+          await fetchSummaryFromApi();
+          const loaded = await fetchMapStats(activeRegion);
+          if (loaded) renderRegion(activeRegion);
         }
       } catch {
         // 정적 미리보기에서는 API가 없을 수 있으므로 로컬 저장만 유지한다.

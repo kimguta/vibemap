@@ -114,6 +114,84 @@ function regionByName(db, name) {
   return db.regions.find((region) => region.name === name || region.id === name);
 }
 
+function normalizeSupabaseRegion(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    level: row.level,
+    parentId: row.parent_id ?? row.parentId ?? null,
+    sortOrder: row.sort_order ?? row.sortOrder ?? 0
+  };
+}
+
+function dynamicRegionId(name, parentId = "national") {
+  const digest = createHash("sha1").update(`${parentId}:${name}`).digest("hex").slice(0, 12);
+  return `${parentId}-${digest}`;
+}
+
+function mergeRegions(db, regions) {
+  const byId = new Map(db.regions.map((region) => [region.id, region]));
+  for (const region of regions) {
+    byId.set(region.id, region);
+  }
+  return { ...db, regions: Array.from(byId.values()) };
+}
+
+async function dbWithSupabaseRegions(db) {
+  if (!hasSupabase()) return db;
+  const rows = await supabaseRequest("/regions?select=id,name,level,parent_id,sort_order&is_active=eq.true");
+  return mergeRegions(db, rows.map(normalizeSupabaseRegion));
+}
+
+async function ensureSupabaseRegion(db, name, parentName) {
+  const existing = regionByName(db, name);
+  if (existing) return existing;
+
+  const rows = await supabaseRequest(`/regions?name=eq.${encodeURIComponent(name)}&select=id,name,level,parent_id,sort_order&limit=1`);
+  if (rows?.[0]) return normalizeSupabaseRegion(rows[0]);
+
+  const parent = regionByName(db, parentName);
+  if (!parent) return null;
+
+  const region = {
+    id: dynamicRegionId(name, parent.id),
+    name,
+    level: "city",
+    parentId: parent.id,
+    sortOrder: 9000
+  };
+
+  await supabaseRequest("/regions?on_conflict=id", {
+    method: "POST",
+    headers: { prefer: "resolution=merge-duplicates,return=minimal" },
+    body: JSON.stringify({
+      id: region.id,
+      name: region.name,
+      level: region.level,
+      parent_id: region.parentId,
+      sort_order: region.sortOrder,
+      is_active: true
+    })
+  });
+
+  return region;
+}
+
+function ensureLocalRegion(db, name, parentName) {
+  const existing = regionByName(db, name);
+  if (existing) return existing;
+  const parent = regionByName(db, parentName);
+  if (!parent) return null;
+  const region = {
+    id: dynamicRegionId(name, parent.id),
+    name,
+    level: "city",
+    parentId: parent.id
+  };
+  db.regions.push(region);
+  return region;
+}
+
 function getQuestion(db, questionId) {
   if (questionId) return db.questions.find((question) => question.id === questionId);
   return db.questions.find((question) => question.status === "active") || db.questions[0];
@@ -128,11 +206,11 @@ function baseSnapshots(db, questionId, period) {
 }
 
 function emptySnapshots(db, questionId, period) {
-  return db.snapshots
-    .filter((snapshot) => snapshot.questionId === questionId && snapshot.period === period)
-    .map((snapshot) => ({
+  return db.regions
+    .filter((region) => region.level !== "nation")
+    .map((region) => ({
       questionId,
-      regionId: snapshot.regionId,
+      regionId: region.id,
       period,
       blue: 0,
       red: 0,
@@ -198,6 +276,35 @@ function decorateSnapshot(snapshot, db) {
     gapPercent: Number(gapPercent.toFixed(1)),
     updatedAt: new Date().toISOString()
   };
+}
+
+function rollupChildSnapshots(snapshots, db) {
+  const byRegion = new Map(snapshots.map((snapshot) => [snapshot.regionId, { ...snapshot }]));
+
+  for (const snapshot of snapshots) {
+    const region = db.regions.find((item) => item.id === snapshot.regionId);
+    if (!region || region.level !== "city" || !region.parentId) continue;
+    const parent = byRegion.get(region.parentId);
+    if (!parent) continue;
+    parent.counts = {
+      blue: parent.counts.blue + snapshot.counts.blue,
+      red: parent.counts.red + snapshot.counts.red,
+      gray: parent.counts.gray + snapshot.counts.gray
+    };
+    parent.total = parent.counts.blue + parent.counts.red + parent.counts.gray;
+    const decided = parent.counts.blue + parent.counts.red;
+    parent.gapPercent = decided > 0
+      ? Number((Math.abs(parent.counts.blue - parent.counts.red) / decided * 100).toFixed(1))
+      : 0;
+    parent.leadingChoice = parent.total > 0
+      ? parent.gapPercent <= 3
+        ? "tie"
+        : parent.counts.blue > parent.counts.red ? "blue" : "red"
+      : "gray";
+    byRegion.set(region.parentId, parent);
+  }
+
+  return Array.from(byRegion.values());
 }
 
 function makeParticipantId(req) {
@@ -328,8 +435,9 @@ async function getSupabaseSnapshots(db, questionId, period) {
   const rows = await supabaseRequest(
     `/participant_choices?question_id=eq.${encodeURIComponent(questionId)}&period=eq.${encodeURIComponent(period)}&select=region_id,choice_id,question_id,period`
   );
-  return applyChoiceRows(emptySnapshots(db, questionId, period), rows, questionId, period)
+  const snapshots = applyChoiceRows(emptySnapshots(db, questionId, period), rows, questionId, period)
     .map((snapshot) => decorateSnapshot(snapshot, db));
+  return rollupChildSnapshots(snapshots, db);
 }
 
 async function handleApi(req, res, url) {
@@ -389,19 +497,21 @@ async function handleApi(req, res, url) {
     if (!question) return fail(res, 404, "QUESTION_NOT_FOUND", "질문을 찾을 수 없습니다.");
 
     if (hasSupabase()) {
-      const snapshots = await getSupabaseSnapshots(db, question.id, period);
-      const liveSummary = await getSupabaseSummary(question.id, period, scopeRegion?.id);
+      const liveDb = await dbWithSupabaseRegions(db);
+      const liveScopeRegion = regionByName(liveDb, url.searchParams.get("scopeRegion") || "경기");
+      const snapshots = await getSupabaseSnapshots(liveDb, question.id, period);
+      const liveSummary = await getSupabaseSummary(question.id, period, liveScopeRegion?.id);
       const atmosphereTotal = snapshots
-        .filter((snapshot) => db.regions.find((region) => region.id === snapshot.regionId)?.level === "province")
+        .filter((snapshot) => liveDb.regions.find((region) => region.id === snapshot.regionId)?.level === "province")
         .reduce((sum, snapshot) => sum + snapshot.total, 0);
-      const local = snapshots.find((snapshot) => snapshot.regionId === scopeRegion?.id);
+      const local = snapshots.find((snapshot) => snapshot.regionId === liveScopeRegion?.id);
       return ok(res, {
         questionId: question.id,
         period,
         nationalTotal: liveSummary.nationalTotal,
         liveTotal: liveSummary.nationalTotal,
         atmosphereTotal,
-        localLabel: `${scopeRegion?.name || "지역"} 흐름`,
+        localLabel: `${liveScopeRegion?.name || "지역"} 흐름`,
         localTotal: liveSummary.localTotal,
         localTrendLabel: local?.leadingChoice === "blue"
           ? "짜장면 강세"
@@ -439,19 +549,22 @@ async function handleApi(req, res, url) {
     const question = getQuestion(db, url.searchParams.get("questionId"));
     const period = url.searchParams.get("period") || "7d";
     const regionName = url.searchParams.get("region") || "전국";
-    const region = regionByName(db, regionName);
+    const mapDb = hasSupabase() ? await dbWithSupabaseRegions(db) : db;
+    const region = regionByName(mapDb, regionName);
     if (!question) return fail(res, 404, "QUESTION_NOT_FOUND", "질문을 찾을 수 없습니다.");
     if (!region) return fail(res, 400, "INVALID_REGION", "유효하지 않은 지역입니다.");
 
     const regionIds = region.level === "nation"
-      ? db.regions.filter((item) => item.level === "province").map((item) => item.id)
-      : db.regions.filter((item) => item.parentId === region.id).map((item) => item.id);
+      ? mapDb.regions.filter((item) => item.level === "province").map((item) => item.id)
+      : mapDb.regions.filter((item) => item.parentId === region.id).map((item) => item.id);
 
     const snapshots = hasSupabase()
-      ? (await getSupabaseSnapshots(db, question.id, period)).filter((snapshot) => regionIds.includes(snapshot.regionId))
-      : applyChoiceDeltas(emptySnapshots(db, question.id, period), db, question.id, period)
-        .filter((snapshot) => regionIds.includes(snapshot.regionId))
-        .map((snapshot) => decorateSnapshot(snapshot, db));
+      ? (await getSupabaseSnapshots(mapDb, question.id, period)).filter((snapshot) => regionIds.includes(snapshot.regionId))
+      : rollupChildSnapshots(
+        applyChoiceDeltas(emptySnapshots(mapDb, question.id, period), mapDb, question.id, period)
+          .map((snapshot) => decorateSnapshot(snapshot, mapDb)),
+        mapDb
+      ).filter((snapshot) => regionIds.includes(snapshot.regionId));
 
     return ok(res, { question, region, period, items: snapshots, storage: hasSupabase() ? "supabase" : "local-json" });
   }
@@ -459,7 +572,17 @@ async function handleApi(req, res, url) {
   if (url.pathname === "/api/choices" && req.method === "POST") {
     const body = await readBody(req);
     const question = getQuestion(db, body.questionId);
-    const region = regionByName(db, body.region || body.regionName || "수원시");
+    const regionName = body.region || body.regionName || "수원시";
+    const parentRegionName = body.parentRegion || body.parentRegionName || "경기";
+    let requestDb = hasSupabase() ? await dbWithSupabaseRegions(db) : db;
+    let region = regionByName(requestDb, regionName);
+    if (!region && hasSupabase()) {
+      region = await ensureSupabaseRegion(requestDb, regionName, parentRegionName);
+      if (region) requestDb = mergeRegions(requestDb, [region]);
+    }
+    if (!region && !hasSupabase()) {
+      region = ensureLocalRegion(requestDb, regionName, parentRegionName);
+    }
     const participantId = body.participantId || makeParticipantId(req);
     const period = body.period || "7d";
     const validChoices = new Set(["blue", "red", "gray"]);
