@@ -1606,9 +1606,7 @@
       const cityName = currentLocation.city;
       const appliesToCurrentCity = name === cityName;
       const appliesToCurrentProvince = name === provinceName;
-      const appliesToSelectedRegion = name === selectedRegionName;
-      const appliesToNational = name === "전국";
-      if (!appliesToCurrentCity && !appliesToCurrentProvince && !appliesToSelectedRegion && !appliesToNational) return null;
+      if (!appliesToCurrentCity && !appliesToCurrentProvince) return null;
       return activeChoiceId;
     }
 
@@ -1654,8 +1652,8 @@
     }
 
     function updateSelectedSummary(name, stat) {
-      const total = stat.total + (choiceDeltaForName(name) ? 1 : 0);
-      localSummaryLabel.textContent = `${displayRegionName(name)} 참여`;
+      const total = stat.total;
+      localSummaryLabel.textContent = name === "전국" ? "선택 화면 참여" : `${displayRegionName(name)} 참여`;
       localSummaryTotal.textContent = total.toLocaleString();
     }
 
