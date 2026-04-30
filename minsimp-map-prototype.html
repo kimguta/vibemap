@@ -1214,7 +1214,7 @@
       if (waitSeconds > 0) {
         reactionSubmit.disabled = true;
         reactionSubmit.textContent = `${waitSeconds}초`;
-        setReactionStatus("잠시 후 다시 남길 수 있어요", true);
+        setReactionStatus("");
         window.clearTimeout(reactionCooldownTimer);
         reactionCooldownTimer = window.setTimeout(updateReactionCooldown, 1000);
         return true;
@@ -1312,11 +1312,7 @@
         if (payload.ok && Array.isArray(payload.data)) {
           remoteReactions = payload.data;
           renderReactions();
-          if (!cooldownSeconds(reactionCooldownKey, reactionCooldownMs)) {
-            setReactionStatus("남겼습니다");
-          } else {
-            setReactionStatus("잠시 후 다시 남길 수 있어요", true);
-          }
+          setReactionStatus("");
           return;
         } else if (!payload.ok && payload.error?.message) {
           setReactionStatus(payload.error.message, true);
@@ -1335,7 +1331,7 @@
       });
       saveReactions(reactions);
       renderReactions();
-      setReactionStatus("잠시 후 다시 남길 수 있어요", true);
+      setReactionStatus("");
     }
 
     function shareText() {
