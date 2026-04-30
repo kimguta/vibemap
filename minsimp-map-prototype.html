@@ -1563,31 +1563,62 @@
       return `오늘 점심은 짜장 vs 짬뽕? 현재 ${regionName}은 ${choiceToneLabel(stat.party)}!\n${window.location.href}`;
     }
 
+    function fallbackCopy(text) {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.top = "-1000px";
+      textarea.style.left = "-1000px";
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      let copied = false;
+      try {
+        copied = document.execCommand("copy");
+      } catch {
+        copied = false;
+      }
+      textarea.remove();
+      return copied;
+    }
+
+    async function copyShareText(text) {
+      if (navigator.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(text);
+          return true;
+        } catch {
+          // 일부 인앱 브라우저는 Clipboard API가 있어도 권한 없이 실패한다.
+        }
+      }
+      return fallbackCopy(text);
+    }
+
     async function shareCurrentView() {
+      const text = shareText();
       const payload = {
         title: "picked | 핃",
-        text: shareText(),
+        text,
         url: window.location.href
       };
 
       try {
-        if (navigator.share) {
+        if (navigator.share && navigator.canShare?.(payload) !== false) {
           await navigator.share(payload);
           shareStatus.textContent = "공유 완료";
-        } else if (navigator.clipboard) {
-          await navigator.clipboard.writeText(shareText());
-          shareStatus.textContent = "링크 복사됨";
-        } else {
-          shareStatus.textContent = "주소를 복사해 공유해 주세요";
+          return;
         }
       } catch {
-        shareStatus.textContent = "공유 취소됨";
+        // 공유 시트가 없거나 취소되면 복사 방식으로 이어간다.
       }
 
+      const copied = await copyShareText(text);
+      shareStatus.textContent = copied ? "공유 문구 복사됨" : "복사가 차단됐어요";
       window.clearTimeout(shareCurrentView.timer);
       shareCurrentView.timer = window.setTimeout(() => {
         shareStatus.textContent = "";
-      }, 1800);
+      }, 2200);
     }
 
     function refreshActiveView() {
