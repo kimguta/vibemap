@@ -172,7 +172,7 @@
 
     main {
       display: grid;
-      grid-template-columns: 300px minmax(0, 1fr) 260px;
+      grid-template-columns: 300px minmax(0, 1fr) 312px;
       gap: 14px;
       padding: 14px;
       min-height: 0;
@@ -219,6 +219,13 @@
 
     aside.panel {
       overflow: visible;
+    }
+
+    .right-rail {
+      display: grid;
+      align-content: start;
+      gap: 14px;
+      min-width: 0;
     }
 
     .section {
@@ -637,8 +644,11 @@
         order: 1;
       }
 
-      .banner-panel {
+      .right-rail {
         order: 3;
+      }
+
+      .banner-panel {
         grid-template-columns: repeat(3, minmax(0, 1fr));
         overflow: visible;
       }
@@ -784,19 +794,21 @@
         </div>
       </section>
 
-      <aside class="panel banner-panel" aria-label="제휴 및 리포트 영역">
-        <div class="banner-card featured">
-          <div class="banner-eyebrow">TODAY BRIEF</div>
-          <h3 class="banner-title">점심 선택이 갈린 지역</h3>
-          <p class="banner-copy">최근 7일 기준, 선택이 팽팽해진 지역을 추적합니다.</p>
-          <div class="banner-stat"><span>미정 증가</span><strong>+12%</strong></div>
-        </div>
+      <div class="right-rail">
+        <aside class="panel banner-panel" aria-label="제휴 및 리포트 영역">
+          <div class="banner-card featured">
+            <div class="banner-eyebrow">TODAY BRIEF</div>
+            <h3 class="banner-title">점심 선택이 갈린 지역</h3>
+            <p class="banner-copy">최근 7일 기준, 선택이 팽팽해진 지역을 추적합니다.</p>
+            <div class="banner-stat"><span>미정 증가</span><strong>+12%</strong></div>
+          </div>
 
-        <div class="banner-card">
-          <div class="banner-eyebrow">SPONSOR</div>
-          <h3 class="banner-title">지역 선택 리포트</h3>
-          <p class="banner-copy">브랜드, 매장, 지역 단체와 연결할 수 있는 제휴 배너 자리입니다.</p>
-        </div>
+          <div class="banner-card">
+            <div class="banner-eyebrow">SPONSOR</div>
+            <h3 class="banner-title">지역 선택 리포트</h3>
+            <p class="banner-copy">브랜드, 매장, 지역 단체와 연결할 수 있는 제휴 배너 자리입니다.</p>
+          </div>
+        </aside>
 
         <div class="banner-card reaction-card">
           <div>
@@ -809,8 +821,7 @@
           </form>
           <div class="reaction-list" id="reaction-list" aria-live="polite"></div>
         </div>
-
-      </aside>
+      </div>
     </main>
   </div>
 
