@@ -475,6 +475,11 @@
       font-size: 13px;
     }
 
+    .reaction-submit:disabled {
+      cursor: wait;
+      opacity: 0.72;
+    }
+
     .reaction-list {
       display: grid;
       gap: 8px;
@@ -1108,6 +1113,7 @@
     const reactionInput = document.querySelector("#reaction-input");
     const reactionCount = document.querySelector("#reaction-count");
     const reactionStatus = document.querySelector("#reaction-status");
+    const reactionSubmit = document.querySelector(".reaction-submit");
     const reactionList = document.querySelector("#reaction-list");
     const shareButton = document.querySelector("#share-button");
     const shareStatus = document.querySelector("#share-status");
@@ -1122,6 +1128,7 @@
     let activeScopeName = "전국";
     let activeChoiceId = null;
     let remoteReactions = null;
+    let reactionCooldownTimer = null;
 
     const defaultReactions = [
       { text: "우리 동네는 오늘 짜장 분위기네", region: "전국", choice: "짜장면", createdAt: "샘플" },
@@ -1202,6 +1209,26 @@
       reactionStatus.classList.toggle("warning", warning);
     }
 
+    function updateReactionCooldown() {
+      const waitSeconds = cooldownSeconds(reactionCooldownKey, reactionCooldownMs);
+      if (waitSeconds > 0) {
+        reactionSubmit.disabled = true;
+        reactionSubmit.textContent = `${waitSeconds}초`;
+        setReactionStatus("잠시 후 다시 남길 수 있어요", true);
+        window.clearTimeout(reactionCooldownTimer);
+        reactionCooldownTimer = window.setTimeout(updateReactionCooldown, 1000);
+        return true;
+      }
+
+      reactionSubmit.disabled = false;
+      reactionSubmit.textContent = "남기기";
+      if (reactionStatus.textContent === "잠시 후 다시 남길 수 있어요") {
+        setReactionStatus("");
+      }
+      window.clearTimeout(reactionCooldownTimer);
+      return false;
+    }
+
     function loadReactions() {
       if (Array.isArray(remoteReactions) && remoteReactions.length > 0) return remoteReactions;
       try {
@@ -1262,10 +1289,11 @@
       if (!cleanText) return;
       const waitSeconds = cooldownSeconds(reactionCooldownKey, reactionCooldownMs);
       if (waitSeconds > 0) {
-        setReactionStatus(`${waitSeconds}초 후 다시 남겨주세요`, true);
+        updateReactionCooldown();
         return;
       }
       markCooldown(reactionCooldownKey);
+      updateReactionCooldown();
       setReactionStatus("남기는 중...");
 
       try {
@@ -1284,7 +1312,11 @@
         if (payload.ok && Array.isArray(payload.data)) {
           remoteReactions = payload.data;
           renderReactions();
-          setReactionStatus("남겼습니다");
+          if (!cooldownSeconds(reactionCooldownKey, reactionCooldownMs)) {
+            setReactionStatus("남겼습니다");
+          } else {
+            setReactionStatus("잠시 후 다시 남길 수 있어요", true);
+          }
           return;
         } else if (!payload.ok && payload.error?.message) {
           setReactionStatus(payload.error.message, true);
@@ -1303,7 +1335,7 @@
       });
       saveReactions(reactions);
       renderReactions();
-      setReactionStatus("남겼습니다");
+      setReactionStatus("잠시 후 다시 남길 수 있어요", true);
     }
 
     function shareText() {
@@ -1746,6 +1778,7 @@
     renderReactions();
     fetchReactionsFromApi();
     updateReactionCount();
+    updateReactionCooldown();
   </script>
 </body>
 </html>
