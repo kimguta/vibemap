@@ -259,6 +259,40 @@ async function insertSupabaseReaction({ questionId, participantId, regionName, c
   });
 }
 
+async function getSupabaseSummary(questionId, period, scopeRegionId) {
+  const rows = await supabaseRequest(
+    `/participant_choices?question_id=eq.${encodeURIComponent(questionId)}&period=eq.${encodeURIComponent(period)}&select=region_id,choice_id`
+  );
+  const nationalTotal = rows.length;
+  const localTotal = rows.filter((row) => row.region_id === scopeRegionId).length;
+  const byRegion = new Map();
+
+  for (const row of rows) {
+    const counts = byRegion.get(row.region_id) || { blue: 0, red: 0, undecided: 0 };
+    if (row.choice_id === "blue") counts.blue += 1;
+    else if (row.choice_id === "red") counts.red += 1;
+    else counts.undecided += 1;
+    byRegion.set(row.region_id, counts);
+  }
+
+  let closeRegionsCount = 0;
+  let lowVolumeRegionsCount = 0;
+  for (const counts of byRegion.values()) {
+    const decided = counts.blue + counts.red;
+    const total = decided + counts.undecided;
+    const gapPercent = decided > 0 ? Math.abs(counts.blue - counts.red) / decided * 100 : 0;
+    if (decided > 0 && gapPercent <= 3) closeRegionsCount += 1;
+    if (total < 50) lowVolumeRegionsCount += 1;
+  }
+
+  return {
+    nationalTotal,
+    localTotal,
+    closeRegionsCount,
+    lowVolumeRegionsCount
+  };
+}
+
 async function handleApi(req, res, url) {
   if (req.method === "OPTIONS") {
     return sendJson(res, 204, {});
@@ -314,6 +348,22 @@ async function handleApi(req, res, url) {
     const period = url.searchParams.get("period") || "7d";
     const scopeRegion = regionByName(db, url.searchParams.get("scopeRegion") || "경기");
     if (!question) return fail(res, 404, "QUESTION_NOT_FOUND", "질문을 찾을 수 없습니다.");
+
+    if (hasSupabase()) {
+      const summary = await getSupabaseSummary(question.id, period, scopeRegion?.id);
+      return ok(res, {
+        questionId: question.id,
+        period,
+        nationalTotal: summary.nationalTotal,
+        localLabel: `${scopeRegion?.name || "지역"} 참여`,
+        localTotal: summary.localTotal,
+        closeRegionsCount: summary.closeRegionsCount,
+        lowVolumeRegionsCount: summary.lowVolumeRegionsCount,
+        storage: "supabase",
+        updatedAt: new Date().toISOString()
+      });
+    }
+
     const snapshots = applyChoiceDeltas(baseSnapshots(db, question.id, period), db, question.id, period)
       .map((snapshot) => decorateSnapshot(snapshot, db));
     const nationalTotal = snapshots

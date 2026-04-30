@@ -862,8 +862,8 @@
           <div class="metric-list">
             <div class="metric"><span>전국 참여</span><strong id="national-summary-total">84,219</strong></div>
             <div class="metric"><span id="local-summary-label">경기 참여</span><strong id="local-summary-total">18,440</strong></div>
-            <div class="metric"><span>팽팽한 지역</span><strong>9곳</strong></div>
-            <div class="metric"><span>참여 부족</span><strong>4곳</strong></div>
+            <div class="metric"><span>팽팽한 지역</span><strong id="close-region-total">9곳</strong></div>
+            <div class="metric"><span>참여 부족</span><strong id="low-volume-total">4곳</strong></div>
           </div>
         </section>
 
@@ -1108,6 +1108,8 @@
     const nationalSummaryTotal = document.querySelector("#national-summary-total");
     const localSummaryLabel = document.querySelector("#local-summary-label");
     const localSummaryTotal = document.querySelector("#local-summary-total");
+    const closeRegionTotal = document.querySelector("#close-region-total");
+    const lowVolumeTotal = document.querySelector("#low-volume-total");
     const supportButtons = Array.from(document.querySelectorAll(".support"));
     const reactionForm = document.querySelector("#reaction-form");
     const reactionInput = document.querySelector("#reaction-input");
@@ -1157,6 +1159,21 @@
       localSummaryTotal.textContent = provinceStat
         ? (provinceStat.total + (selectedChoice ? 1 : 0)).toLocaleString()
         : "0";
+    }
+
+    async function fetchSummaryFromApi() {
+      try {
+        const response = await fetch(`/api/summary?questionId=${encodeURIComponent(activeQuestionId)}&period=7d&scopeRegion=${encodeURIComponent(currentLocation.province)}`);
+        const payload = await response.json();
+        if (!payload.ok || !payload.data) return;
+        nationalSummaryTotal.textContent = Number(payload.data.nationalTotal || 0).toLocaleString();
+        localSummaryLabel.textContent = payload.data.localLabel || `${currentLocation.province} 참여`;
+        localSummaryTotal.textContent = Number(payload.data.localTotal || 0).toLocaleString();
+        closeRegionTotal.textContent = `${Number(payload.data.closeRegionsCount || 0).toLocaleString()}곳`;
+        lowVolumeTotal.textContent = `${Number(payload.data.lowVolumeRegionsCount || 0).toLocaleString()}곳`;
+      } catch {
+        // 정적 미리보기에서는 샘플 요약을 그대로 쓴다.
+      }
     }
 
     function setCookie(name, value, days = 365) {
@@ -1368,6 +1385,7 @@
     function refreshActiveView() {
       const activeRegion = document.querySelector(".region-tabs .chip.active")?.dataset.region || "전국";
       updateLocalSummary();
+      fetchSummaryFromApi();
       renderRegion(activeRegion);
     }
 
@@ -1769,6 +1787,7 @@
     });
 
     updateLocalSummary();
+    fetchSummaryFromApi();
     applyStoredSupportChoice();
     renderNational();
     renderReactions();
