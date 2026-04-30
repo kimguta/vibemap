@@ -413,12 +413,12 @@
 
     .reaction-form {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
       gap: 8px;
     }
 
     .reaction-input {
       min-width: 0;
+      width: 100%;
       height: 36px;
       padding: 0 12px;
       border: 1px solid var(--line);
@@ -436,6 +436,7 @@
     }
 
     .reaction-submit {
+      width: 100%;
       height: 36px;
       padding: 0 12px;
       border: 1px solid var(--line);
@@ -484,7 +485,7 @@
 
     .map-reaction-card {
       position: absolute;
-      right: 16px;
+      right: 42px;
       bottom: 16px;
       z-index: 4;
       width: min(318px, calc(100% - 32px));
@@ -802,8 +803,7 @@
         <div class="banner-card reaction-card map-reaction-card">
           <div>
             <div class="banner-eyebrow">LIVE REACTIONS</div>
-            <h3 class="banner-title">한 줄 반응</h3>
-            <p class="banner-copy">댓글 없이 짧게만 남기는 지역 반응입니다.</p>
+            <h3 class="banner-title">응원하기</h3>
           </div>
           <form class="reaction-form" id="reaction-form">
             <input class="reaction-input" id="reaction-input" maxlength="36" placeholder="우리 동네 왜 짬뽕이냐" autocomplete="off" />
