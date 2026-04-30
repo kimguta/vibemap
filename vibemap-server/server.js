@@ -141,6 +141,24 @@ function applyChoiceDeltas(snapshots, db, questionId, period) {
   return Array.from(byKey.values());
 }
 
+function applyChoiceRows(snapshots, rows, questionId, period) {
+  const byKey = new Map(snapshots.map((snapshot) => [snapshotKey(snapshot), { ...snapshot }]));
+  for (const row of rows) {
+    const rowQuestionId = row.questionId || row.question_id;
+    const rowPeriod = row.period;
+    const regionId = row.regionId || row.region_id;
+    const choiceId = toClientChoice(row.choiceId || row.choice_id);
+    if (rowQuestionId !== questionId || rowPeriod !== period) continue;
+    const key = `${questionId}:${period}:${regionId}`;
+    const snapshot = byKey.get(key);
+    if (!snapshot) continue;
+
+    snapshot[choiceId] = (snapshot[choiceId] || 0) + 1;
+    byKey.set(key, snapshot);
+  }
+  return Array.from(byKey.values());
+}
+
 function decorateSnapshot(snapshot, db) {
   const region = db.regions.find((item) => item.id === snapshot.regionId);
   const blue = snapshot.blue || 0;
@@ -293,6 +311,14 @@ async function getSupabaseSummary(questionId, period, scopeRegionId) {
   };
 }
 
+async function getSupabaseSnapshots(db, questionId, period) {
+  const rows = await supabaseRequest(
+    `/participant_choices?question_id=eq.${encodeURIComponent(questionId)}&period=eq.${encodeURIComponent(period)}&select=region_id,choice_id,question_id,period`
+  );
+  return applyChoiceRows(baseSnapshots(db, questionId, period), rows, questionId, period)
+    .map((snapshot) => decorateSnapshot(snapshot, db));
+}
+
 async function handleApi(req, res, url) {
   if (req.method === "OPTIONS") {
     return sendJson(res, 204, {});
@@ -350,15 +376,19 @@ async function handleApi(req, res, url) {
     if (!question) return fail(res, 404, "QUESTION_NOT_FOUND", "질문을 찾을 수 없습니다.");
 
     if (hasSupabase()) {
-      const summary = await getSupabaseSummary(question.id, period, scopeRegion?.id);
+      const snapshots = await getSupabaseSnapshots(db, question.id, period);
+      const nationalTotal = snapshots
+        .filter((snapshot) => db.regions.find((region) => region.id === snapshot.regionId)?.level === "province")
+        .reduce((sum, snapshot) => sum + snapshot.total, 0);
+      const local = snapshots.find((snapshot) => snapshot.regionId === scopeRegion?.id);
       return ok(res, {
         questionId: question.id,
         period,
-        nationalTotal: summary.nationalTotal,
+        nationalTotal,
         localLabel: `${scopeRegion?.name || "지역"} 참여`,
-        localTotal: summary.localTotal,
-        closeRegionsCount: summary.closeRegionsCount,
-        lowVolumeRegionsCount: summary.lowVolumeRegionsCount,
+        localTotal: local?.total || 0,
+        closeRegionsCount: snapshots.filter((snapshot) => snapshot.leadingChoice === "tie").length,
+        lowVolumeRegionsCount: snapshots.filter((snapshot) => snapshot.total < 50).length,
         storage: "supabase",
         updatedAt: new Date().toISOString()
       });
@@ -394,11 +424,13 @@ async function handleApi(req, res, url) {
       ? db.regions.filter((item) => item.level === "province").map((item) => item.id)
       : db.regions.filter((item) => item.parentId === region.id).map((item) => item.id);
 
-    const snapshots = applyChoiceDeltas(baseSnapshots(db, question.id, period), db, question.id, period)
-      .filter((snapshot) => regionIds.includes(snapshot.regionId))
-      .map((snapshot) => decorateSnapshot(snapshot, db));
+    const snapshots = hasSupabase()
+      ? (await getSupabaseSnapshots(db, question.id, period)).filter((snapshot) => regionIds.includes(snapshot.regionId))
+      : applyChoiceDeltas(baseSnapshots(db, question.id, period), db, question.id, period)
+        .filter((snapshot) => regionIds.includes(snapshot.regionId))
+        .map((snapshot) => decorateSnapshot(snapshot, db));
 
-    return ok(res, { question, region, period, items: snapshots });
+    return ok(res, { question, region, period, items: snapshots, storage: hasSupabase() ? "supabase" : "local-json" });
   }
 
   if (url.pathname === "/api/choices" && req.method === "POST") {

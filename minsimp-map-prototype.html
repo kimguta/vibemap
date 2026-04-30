@@ -1170,6 +1170,8 @@
     let reactionCooldownTimer = null;
     let selectedRegionName = window.localStorage.getItem(selectedRegionStorageKey) || "전국";
     let selectedRegionStat = null;
+    const remoteStatsByName = new Map();
+    let remoteMapRefreshTimer = null;
 
     const defaultReactions = [
       { text: "우리 동네는 오늘 짜장 분위기네", region: "전국", choice: "짜장면", createdAt: "샘플" },
@@ -1475,6 +1477,7 @@
       updateLocalSummary();
       if (selectedRegionStat) updateSelectedSummary(selectedRegionName, selectedRegionStat);
       fetchSummaryFromApi();
+      scheduleMapStatsRefresh(activeRegion);
     }
 
     function choiceIdFromLabel(label) {
@@ -1543,6 +1546,7 @@
     }
 
     function statForName(name, fallbackParty = "gray", index = 0) {
+      if (remoteStatsByName.has(name)) return remoteStatsByName.get(name);
       if (regions[name]) return regions[name];
       if (provinceStats[name]) return provinceStats[name];
       const label = fallbackParty === "blue"
@@ -1558,6 +1562,42 @@
         diff: fallbackParty === "tie" ? 2.4 : fallbackParty === "gray" ? 0 : 4.4 + (index % 6),
         total: 220 + index * 41
       };
+    }
+
+    function labelFromParty(party) {
+      if (party === "blue") return "짜장면 강세";
+      if (party === "red") return "짬뽕 강세";
+      if (party === "tie") return "팽팽함";
+      return "선택 적음";
+    }
+
+    function statFromApiItem(item) {
+      const party = item.leadingChoice === "undecided" ? "gray" : item.leadingChoice;
+      return {
+        party,
+        label: labelFromParty(party),
+        diff: Number(item.gapPercent || 0),
+        total: Number(item.total || 0),
+        counts: {
+          blue: Number(item.counts?.blue || 0),
+          red: Number(item.counts?.red || 0),
+          undecided: Number(item.counts?.gray || item.counts?.undecided || 0)
+        }
+      };
+    }
+
+    async function fetchMapStats(regionName) {
+      try {
+        const response = await fetch(`/api/map?questionId=${encodeURIComponent(activeQuestionId)}&period=7d&region=${encodeURIComponent(regionName)}`);
+        const payload = await response.json();
+        if (!payload.ok || !Array.isArray(payload.data?.items)) return false;
+        payload.data.items.forEach((item) => {
+          remoteStatsByName.set(item.name, statFromApiItem(item));
+        });
+        return true;
+      } catch {
+        return false;
+      }
     }
 
     function choiceDeltaForName(name) {
@@ -1853,6 +1893,23 @@
       return renderGenericRegion(name);
     }
 
+    function scheduleMapStatsRefresh(regionName) {
+      window.clearTimeout(remoteMapRefreshTimer);
+      remoteMapRefreshTimer = window.setTimeout(async () => {
+        const loaded = await fetchMapStats(regionName);
+        const activeRegion = document.querySelector(".region-tabs .chip.active")?.dataset.region || "전국";
+        if (loaded && activeRegion === regionName) {
+          const previousSelectedRegion = selectedRegionName;
+          renderRegion(activeRegion);
+          if (previousSelectedRegion !== activeRegion && previousSelectedRegion !== "전국") {
+            const stat = statForName(previousSelectedRegion, (regions[previousSelectedRegion] || provinceStats[previousSelectedRegion] || {}).party);
+            markSelected(previousSelectedRegion);
+            updateSubtitle(previousSelectedRegion, stat);
+          }
+        }
+      }, 0);
+    }
+
     function renderSavedRegion() {
       const savedRegion = selectedRegionName || "전국";
       const parentRegion = regionParentMap[savedRegion];
@@ -1868,12 +1925,15 @@
     provinceTabs.forEach((name) => {
       const button = document.createElement("button");
       button.type = "button";
-      button.className = "chip";
-      button.dataset.region = name;
-      button.textContent = name;
-      button.addEventListener("click", () => renderRegion(name));
-      tabs.appendChild(button);
-    });
+        button.className = "chip";
+        button.dataset.region = name;
+        button.textContent = name;
+        button.addEventListener("click", () => {
+          renderRegion(name);
+          scheduleMapStatsRefresh(name);
+        });
+        tabs.appendChild(button);
+      });
 
     document.querySelectorAll(".period-chip").forEach((button) => {
       button.addEventListener("click", () => {
@@ -1923,12 +1983,15 @@
       resizeTimer = setTimeout(() => {
         const activeRegion = document.querySelector(".region-tabs .chip.active")?.dataset.region || "전국";
         renderRegion(activeRegion);
+        scheduleMapStatsRefresh(activeRegion);
       }, 120);
     });
 
     async function initializePage() {
       applyStoredSupportChoice();
       renderSavedRegion();
+      const initialRegion = document.querySelector(".region-tabs .chip.active")?.dataset.region || "전국";
+      scheduleMapStatsRefresh(initialRegion);
       renderReactions();
       updateReactionCount();
       updateReactionCooldown();
