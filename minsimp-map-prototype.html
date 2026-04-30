@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>VibeMap 프로토타입</title>
+  <title>Picked 프로토타입</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
@@ -82,8 +82,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
-      padding: 12px 20px;
+      gap: 12px;
+      padding: 7px 18px;
       border-bottom: 1px solid var(--line);
       background: rgba(255, 255, 255, 0.82);
       backdrop-filter: blur(14px);
@@ -92,21 +92,21 @@
     .brand {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
       min-width: 0;
     }
 
     .brand h1 {
       margin: 0;
       font-family: "Manrope", "IBM Plex Sans KR", sans-serif;
-      font-size: 26px;
+      font-size: 21px;
       line-height: 1;
       letter-spacing: -0.03em;
     }
 
     .brand span {
       color: var(--muted);
-      font-size: 13px;
+      font-size: 11px;
     }
 
     .issue-card {
@@ -139,22 +139,22 @@
 
     .period-tabs {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
       justify-content: flex-end;
     }
 
     .period-chip,
     .chip {
-      height: 34px;
-      padding: 0 12px;
+      height: 28px;
+      padding: 0 10px;
       border: 1px solid var(--line);
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.96);
       cursor: pointer;
       white-space: nowrap;
       transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
-      font-size: 13px;
+      font-size: 12px;
     }
 
     .period-chip:hover,
@@ -659,7 +659,7 @@
   <div class="app">
     <header>
       <div class="brand">
-        <h1>VibeMap</h1>
+        <h1>Picked</h1>
         <span>지역별 선택 흐름 지도</span>
       </div>
       <div class="period-tabs" aria-label="기간 선택">
