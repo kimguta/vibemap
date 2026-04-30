@@ -423,11 +423,16 @@
       gap: 8px;
     }
 
+    .reaction-input-wrap {
+      position: relative;
+      min-width: 0;
+    }
+
     .reaction-input {
       min-width: 0;
       width: 100%;
       height: 36px;
-      padding: 0 12px;
+      padding: 0 54px 0 12px;
       border: 1px solid var(--line);
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.86);
@@ -443,9 +448,13 @@
     }
 
     .reaction-count {
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      transform: translateY(-50%);
       color: var(--muted);
       font-size: 11px;
-      text-align: right;
+      pointer-events: none;
     }
 
     .reaction-count.near-limit {
@@ -865,8 +874,10 @@
             <h3 class="banner-title">응원하기</h3>
           </div>
           <form class="reaction-form" id="reaction-form">
-            <input class="reaction-input" id="reaction-input" maxlength="36" placeholder="우리 동네 왜 짬뽕이냐" autocomplete="off" />
-            <div class="reaction-count" id="reaction-count">0 / 36</div>
+            <div class="reaction-input-wrap">
+              <input class="reaction-input" id="reaction-input" maxlength="36" placeholder="우리 동네 왜 짬뽕이냐" autocomplete="off" />
+              <div class="reaction-count" id="reaction-count">0 / 36</div>
+            </div>
             <button class="reaction-submit" type="submit">남기기</button>
           </form>
           <div class="reaction-list" id="reaction-list" aria-live="polite"></div>
