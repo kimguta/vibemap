@@ -1200,6 +1200,9 @@
     const reactionStorageKey = "picked-short-reactions";
     const selectedRegionStorageKey = "picked-selected-region";
     const activeQuestionId = "lunch-jjajang-jjamppong";
+    const apiBaseUrl = window.location.hostname.endsWith("github.io")
+      ? "https://vibemap-z2vx.onrender.com"
+      : "";
     const choiceCooldownMs = 3000;
     const reactionCooldownMs = 30000;
     const choiceCooldownKey = "picked-choice-cooldown-at";
@@ -1212,6 +1215,10 @@
     let selectedRegionStat = null;
     const remoteStatsByName = new Map();
     let remoteMapRefreshTimer = null;
+
+    function apiUrl(path) {
+      return `${apiBaseUrl}${path}`;
+    }
 
     const defaultReactions = [
       { text: "우리 동네는 오늘 짜장 분위기네", region: "전국", choice: "짜장면", createdAt: "샘플" },
@@ -1350,7 +1357,7 @@
 
     async function fetchSummaryFromApi() {
       try {
-        const response = await fetch(`/api/summary?questionId=${encodeURIComponent(activeQuestionId)}&period=7d&scopeRegion=${encodeURIComponent(currentLocation.province)}`);
+        const response = await fetch(apiUrl(`/api/summary?questionId=${encodeURIComponent(activeQuestionId)}&period=7d&scopeRegion=${encodeURIComponent(currentLocation.province)}`));
         const payload = await response.json();
         if (!payload.ok || !payload.data) return false;
         nationalSummaryTotal.textContent = Number(payload.data.nationalTotal || 0).toLocaleString();
@@ -1455,7 +1462,7 @@
 
     async function fetchReactionsFromApi() {
       try {
-        const response = await fetch("/api/reactions?limit=6");
+        const response = await fetch(apiUrl("/api/reactions?limit=6"));
         const payload = await response.json();
         if (payload.ok && Array.isArray(payload.data)) {
           remoteReactions = payload.data;
@@ -1513,7 +1520,7 @@
       setReactionStatus("남기는 중...");
 
       try {
-        const response = await fetch("/api/reactions", {
+        const response = await fetch(apiUrl("/api/reactions"), {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
@@ -1617,7 +1624,7 @@
       markCooldown(choiceCooldownKey);
 
       try {
-        const response = await fetch("/api/choices", {
+        const response = await fetch(apiUrl("/api/choices"), {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
@@ -1707,7 +1714,7 @@
 
     async function fetchMapStats(regionName) {
       try {
-        const response = await fetch(`/api/map?questionId=${encodeURIComponent(activeQuestionId)}&period=7d&region=${encodeURIComponent(regionName)}`);
+        const response = await fetch(apiUrl(`/api/map?questionId=${encodeURIComponent(activeQuestionId)}&period=7d&region=${encodeURIComponent(regionName)}`));
         const payload = await response.json();
         if (!payload.ok || !Array.isArray(payload.data?.items)) return false;
         payload.data.items.forEach((item) => {
