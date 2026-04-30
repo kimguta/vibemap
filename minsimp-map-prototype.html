@@ -478,7 +478,7 @@
     .reaction-list {
       display: grid;
       gap: 8px;
-      max-height: 342px;
+      max-height: 286px;
       overflow: hidden;
     }
 
@@ -504,22 +504,19 @@
 
     .map-panel {
       display: grid;
-      grid-template-rows: auto auto 1fr;
-      position: relative;
+      grid-template-rows: auto auto auto 1fr;
       min-height: 0;
       overflow: hidden;
     }
 
     .active-region-badge {
-      position: absolute;
-      left: 18px;
-      bottom: 16px;
-      z-index: 3;
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      max-width: calc(100% - 36px);
+      width: fit-content;
+      max-width: calc(100% - 40px);
       min-height: 34px;
+      margin: 0 20px 4px;
       padding: 0 12px;
       border: 1px solid rgba(216, 225, 238, 0.95);
       border-radius: 999px;
@@ -728,12 +725,6 @@
         order: 1;
       }
 
-      .active-region-badge {
-        position: static;
-        width: fit-content;
-        margin: 0 12px 12px;
-      }
-
       .right-rail {
         order: 3;
       }
@@ -757,9 +748,14 @@
       }
 
       .map-head,
-      .region-tabs {
+      .region-tabs,
+      .active-region-badge {
         padding-left: 12px;
         padding-right: 12px;
+      }
+
+      .active-region-badge {
+        margin: 0 12px 4px;
       }
 
       .issue-question {
@@ -883,12 +879,12 @@
           </div>
         </div>
         <nav class="region-tabs" id="region-tabs" aria-label="지역 선택"></nav>
-        <div class="map-body">
-          <div id="map"></div>
-        </div>
         <div class="active-region-badge" aria-live="polite">
           <span>현재 보는 지역</span>
           <strong id="active-region-label">전국</strong>
+        </div>
+        <div class="map-body">
+          <div id="map"></div>
         </div>
       </section>
 
