@@ -127,6 +127,19 @@ function baseSnapshots(db, questionId, period) {
   return db.snapshots.filter((snapshot) => snapshot.questionId === questionId && snapshot.period === period);
 }
 
+function emptySnapshots(db, questionId, period) {
+  return db.snapshots
+    .filter((snapshot) => snapshot.questionId === questionId && snapshot.period === period)
+    .map((snapshot) => ({
+      questionId,
+      regionId: snapshot.regionId,
+      period,
+      blue: 0,
+      red: 0,
+      gray: 0
+    }));
+}
+
 function applyChoiceDeltas(snapshots, db, questionId, period) {
   const byKey = new Map(snapshots.map((snapshot) => [snapshotKey(snapshot), { ...snapshot }]));
   for (const choice of db.choices) {
@@ -170,7 +183,7 @@ function decorateSnapshot(snapshot, db) {
   const gapPercent = decided > 0 ? (gapCount / decided) * 100 : 0;
   let leadingChoice = "gray";
 
-  if (total >= 50) {
+  if (total > 0) {
     if (gapPercent <= 3) leadingChoice = "tie";
     else leadingChoice = blue > red ? "blue" : "red";
   }
@@ -315,7 +328,7 @@ async function getSupabaseSnapshots(db, questionId, period) {
   const rows = await supabaseRequest(
     `/participant_choices?question_id=eq.${encodeURIComponent(questionId)}&period=eq.${encodeURIComponent(period)}&select=region_id,choice_id,question_id,period`
   );
-  return applyChoiceRows(baseSnapshots(db, questionId, period), rows, questionId, period)
+  return applyChoiceRows(emptySnapshots(db, questionId, period), rows, questionId, period)
     .map((snapshot) => decorateSnapshot(snapshot, db));
 }
 
@@ -404,7 +417,7 @@ async function handleApi(req, res, url) {
       });
     }
 
-    const snapshots = applyChoiceDeltas(baseSnapshots(db, question.id, period), db, question.id, period)
+    const snapshots = applyChoiceDeltas(emptySnapshots(db, question.id, period), db, question.id, period)
       .map((snapshot) => decorateSnapshot(snapshot, db));
     const nationalTotal = snapshots
       .filter((snapshot) => db.regions.find((region) => region.id === snapshot.regionId)?.level === "province")
@@ -436,7 +449,7 @@ async function handleApi(req, res, url) {
 
     const snapshots = hasSupabase()
       ? (await getSupabaseSnapshots(db, question.id, period)).filter((snapshot) => regionIds.includes(snapshot.regionId))
-      : applyChoiceDeltas(baseSnapshots(db, question.id, period), db, question.id, period)
+      : applyChoiceDeltas(emptySnapshots(db, question.id, period), db, question.id, period)
         .filter((snapshot) => regionIds.includes(snapshot.regionId))
         .map((snapshot) => decorateSnapshot(snapshot, db));
 

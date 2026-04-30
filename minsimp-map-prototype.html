@@ -733,8 +733,8 @@
     }
 
     .tile.gray {
-      background: var(--gray);
-      color: #fff;
+      background: #f1f1f1;
+      color: #8a94a6;
     }
 
     .tile.empty {
@@ -1339,13 +1339,13 @@
     function updateLocalSummary() {
       const provinceName = currentLocation.province;
       const cityName = currentLocation.city;
-      const provinceStat = provinceStats[provinceName];
+      const provinceStat = statForName(provinceName);
 
       currentLocationLabel.textContent = formatLocationLabel(provinceName, cityName);
 
       nationalSummaryTotal.textContent = storedChoiceLabel() ? "1" : "0";
       localSummaryLabel.textContent = `${provinceName} 흐름`;
-      localSummaryTotal.textContent = provinceStat ? provinceStat.label : "-";
+      localSummaryTotal.textContent = provinceStat.label;
     }
 
     async function fetchSummaryFromApi() {
@@ -1665,20 +1665,12 @@
 
     function statForName(name, fallbackParty = "gray", index = 0) {
       if (remoteStatsByName.has(name)) return remoteStatsByName.get(name);
-      if (regions[name]) return regions[name];
-      if (provinceStats[name]) return provinceStats[name];
-      const label = fallbackParty === "blue"
-        ? "짜장면 강세"
-        : fallbackParty === "red"
-          ? "짬뽕 강세"
-          : fallbackParty === "tie"
-            ? "팽팽함"
-            : "선택 적음";
       return {
-        party: fallbackParty,
-        label,
-        diff: fallbackParty === "tie" ? 2.4 : fallbackParty === "gray" ? 0 : 4.4 + (index % 6),
-        total: 220 + index * 41
+        party: "gray",
+        label: "아직 투표 없음",
+        diff: 0,
+        total: 0,
+        counts: { blue: 0, red: 0, undecided: 0 }
       };
     }
 
@@ -1686,7 +1678,7 @@
       if (party === "blue") return "짜장면 강세";
       if (party === "red") return "짬뽕 강세";
       if (party === "tie") return "팽팽함";
-      return "선택 적음";
+      return "아직 투표 없음";
     }
 
     function statFromApiItem(item) {
@@ -1947,7 +1939,7 @@
         "cols-9",
         9,
         (name) => {
-          if (name === "서울") return provinceStats["서울"];
+          if (name === "서울") return statForName("서울");
           return statForName(name, (regions[name] || {}).party);
         },
         (name, stat) => {
