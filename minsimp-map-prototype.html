@@ -893,8 +893,8 @@
         <section class="section">
           <h3>오늘의 요약</h3>
           <div class="metric-list">
-            <div class="metric"><span>전국 참여</span><strong id="national-summary-total">84,219</strong></div>
-            <div class="metric"><span id="local-summary-label">경기 참여</span><strong id="local-summary-total">18,440</strong></div>
+            <div class="metric"><span>현재 참여</span><strong id="national-summary-total">0</strong></div>
+            <div class="metric"><span id="local-summary-label">선택 화면 흐름</span><strong id="local-summary-total">-</strong></div>
             <div class="metric"><span>팽팽한 지역</span><strong id="close-region-total">9곳</strong></div>
             <div class="metric"><span>참여 부족</span><strong id="low-volume-total">4곳</strong></div>
           </div>
@@ -1216,18 +1216,14 @@
       const provinceName = currentLocation.province;
       const cityName = currentLocation.city;
       const provinceStat = provinceStats[provinceName];
-      const selectedChoice = storedChoiceLabel();
 
       currentLocationLabel.textContent = provinceName === "서울" || provinceName === "세종"
         ? `${provinceName} ${cityName}`
         : `${provinceName}도 ${cityName}`;
 
-      const nationalTotal = Object.values(provinceStats).reduce((sum, stat) => sum + stat.total, 0) + (selectedChoice ? 1 : 0);
-      nationalSummaryTotal.textContent = nationalTotal.toLocaleString();
-      localSummaryLabel.textContent = `${provinceName} 참여`;
-      localSummaryTotal.textContent = provinceStat
-        ? (provinceStat.total + (selectedChoice ? 1 : 0)).toLocaleString()
-        : "0";
+      nationalSummaryTotal.textContent = storedChoiceLabel() ? "1" : "0";
+      localSummaryLabel.textContent = `${provinceName} 흐름`;
+      localSummaryTotal.textContent = provinceStat ? provinceStat.label : "-";
     }
 
     async function fetchSummaryFromApi() {
@@ -1239,8 +1235,8 @@
         if (selectedRegionStat) {
           updateSelectedSummary(selectedRegionName, selectedRegionStat);
         } else {
-          localSummaryLabel.textContent = payload.data.localLabel || `${currentLocation.province} 참여`;
-          localSummaryTotal.textContent = Number(payload.data.localTotal || 0).toLocaleString();
+          localSummaryLabel.textContent = payload.data.localLabel || `${currentLocation.province} 흐름`;
+          localSummaryTotal.textContent = payload.data.localTrendLabel || "-";
         }
         closeRegionTotal.textContent = `${Number(payload.data.closeRegionsCount || 0).toLocaleString()}곳`;
         lowVolumeTotal.textContent = `${Number(payload.data.lowVolumeRegionsCount || 0).toLocaleString()}곳`;
@@ -1652,9 +1648,8 @@
     }
 
     function updateSelectedSummary(name, stat) {
-      const total = stat.total;
-      localSummaryLabel.textContent = name === "전국" ? "선택 화면 참여" : `${displayRegionName(name)} 참여`;
-      localSummaryTotal.textContent = total.toLocaleString();
+      localSummaryLabel.textContent = name === "전국" ? "선택 화면 흐름" : `${displayRegionName(name)} 흐름`;
+      localSummaryTotal.textContent = stat.label;
     }
 
     function aggregateStats(items) {

@@ -377,16 +377,26 @@ async function handleApi(req, res, url) {
 
     if (hasSupabase()) {
       const snapshots = await getSupabaseSnapshots(db, question.id, period);
-      const nationalTotal = snapshots
+      const liveSummary = await getSupabaseSummary(question.id, period, scopeRegion?.id);
+      const atmosphereTotal = snapshots
         .filter((snapshot) => db.regions.find((region) => region.id === snapshot.regionId)?.level === "province")
         .reduce((sum, snapshot) => sum + snapshot.total, 0);
       const local = snapshots.find((snapshot) => snapshot.regionId === scopeRegion?.id);
       return ok(res, {
         questionId: question.id,
         period,
-        nationalTotal,
-        localLabel: `${scopeRegion?.name || "지역"} 참여`,
-        localTotal: local?.total || 0,
+        nationalTotal: liveSummary.nationalTotal,
+        liveTotal: liveSummary.nationalTotal,
+        atmosphereTotal,
+        localLabel: `${scopeRegion?.name || "지역"} 흐름`,
+        localTotal: liveSummary.localTotal,
+        localTrendLabel: local?.leadingChoice === "blue"
+          ? "짜장면 강세"
+          : local?.leadingChoice === "red"
+            ? "짬뽕 강세"
+            : local?.leadingChoice === "tie"
+              ? "팽팽함"
+              : "선택 적음",
         closeRegionsCount: snapshots.filter((snapshot) => snapshot.leadingChoice === "tie").length,
         lowVolumeRegionsCount: snapshots.filter((snapshot) => snapshot.total < 50).length,
         storage: "supabase",
