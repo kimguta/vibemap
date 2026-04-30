@@ -578,6 +578,16 @@
       font-size: 11px;
     }
 
+    .reaction-status {
+      min-height: 14px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .reaction-status.warning {
+      color: var(--red);
+    }
+
     .map-head h2 {
       margin-bottom: 6px;
     }
@@ -915,6 +925,7 @@
               <div class="reaction-count" id="reaction-count">0 / 36</div>
             </div>
             <button class="reaction-submit" type="submit">남기기</button>
+            <div class="reaction-status" id="reaction-status" aria-live="polite"></div>
           </form>
           <div class="reaction-list" id="reaction-list" aria-live="polite"></div>
         </div>
@@ -1096,6 +1107,7 @@
     const reactionForm = document.querySelector("#reaction-form");
     const reactionInput = document.querySelector("#reaction-input");
     const reactionCount = document.querySelector("#reaction-count");
+    const reactionStatus = document.querySelector("#reaction-status");
     const reactionList = document.querySelector("#reaction-list");
     const shareButton = document.querySelector("#share-button");
     const shareStatus = document.querySelector("#share-status");
@@ -1103,6 +1115,10 @@
     const participantStorageKey = "vibemap-participant-id";
     const reactionStorageKey = "picked-short-reactions";
     const activeQuestionId = "lunch-jjajang-jjamppong";
+    const choiceCooldownMs = 3000;
+    const reactionCooldownMs = 30000;
+    const choiceCooldownKey = "picked-choice-cooldown-at";
+    const reactionCooldownKey = "picked-reaction-cooldown-at";
     let activeScopeName = "전국";
     let activeChoiceId = null;
     let remoteReactions = null;
@@ -1171,6 +1187,21 @@
       reactionCount.classList.toggle("near-limit", length >= reactionInput.maxLength - 6);
     }
 
+    function cooldownSeconds(key, cooldownMs) {
+      const lastAt = Number(window.localStorage.getItem(key) || 0);
+      const remainingMs = cooldownMs - (Date.now() - lastAt);
+      return Math.max(0, Math.ceil(remainingMs / 1000));
+    }
+
+    function markCooldown(key) {
+      window.localStorage.setItem(key, String(Date.now()));
+    }
+
+    function setReactionStatus(message = "", warning = false) {
+      reactionStatus.textContent = message;
+      reactionStatus.classList.toggle("warning", warning);
+    }
+
     function loadReactions() {
       if (Array.isArray(remoteReactions) && remoteReactions.length > 0) return remoteReactions;
       try {
@@ -1229,6 +1260,13 @@
     async function addReaction(text) {
       const cleanText = text.trim().replace(/\s+/g, " ").slice(0, 36);
       if (!cleanText) return;
+      const waitSeconds = cooldownSeconds(reactionCooldownKey, reactionCooldownMs);
+      if (waitSeconds > 0) {
+        setReactionStatus(`${waitSeconds}초 후 다시 남겨주세요`, true);
+        return;
+      }
+      markCooldown(reactionCooldownKey);
+      setReactionStatus("남기는 중...");
 
       try {
         const response = await fetch("/api/reactions", {
@@ -1246,6 +1284,10 @@
         if (payload.ok && Array.isArray(payload.data)) {
           remoteReactions = payload.data;
           renderReactions();
+          setReactionStatus("남겼습니다");
+          return;
+        } else if (!payload.ok && payload.error?.message) {
+          setReactionStatus(payload.error.message, true);
           return;
         }
       } catch {
@@ -1261,6 +1303,7 @@
       });
       saveReactions(reactions);
       renderReactions();
+      setReactionStatus("남겼습니다");
     }
 
     function shareText() {
@@ -1307,8 +1350,19 @@
     }
 
     async function syncChoiceToApi(choiceLabel) {
+      const waitSeconds = cooldownSeconds(choiceCooldownKey, choiceCooldownMs);
+      if (waitSeconds > 0) {
+        shareStatus.textContent = `${waitSeconds}초 후 다시 저장됩니다`;
+        window.clearTimeout(syncChoiceToApi.timer);
+        syncChoiceToApi.timer = window.setTimeout(() => {
+          shareStatus.textContent = "";
+        }, 1600);
+        return;
+      }
+      markCooldown(choiceCooldownKey);
+
       try {
-        await fetch("/api/choices", {
+        const response = await fetch("/api/choices", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
@@ -1319,6 +1373,10 @@
             choiceId: choiceIdFromLabel(choiceLabel)
           })
         });
+        const payload = await response.json();
+        if (!payload.ok && payload.error?.message) {
+          shareStatus.textContent = payload.error.message;
+        }
       } catch {
         // 정적 미리보기에서는 API가 없을 수 있으므로 로컬 저장만 유지한다.
       }

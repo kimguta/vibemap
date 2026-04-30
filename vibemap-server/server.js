@@ -13,6 +13,9 @@ const host = process.env.HOST || "0.0.0.0";
 const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, "");
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 let memoryDb = null;
+const rateLimits = new Map();
+const choiceCooldownMs = 3000;
+const reactionCooldownMs = 30000;
 
 function hasSupabase() {
   return Boolean(supabaseUrl && supabaseKey);
@@ -83,6 +86,21 @@ function ok(res, data) {
 
 function fail(res, status, code, message) {
   sendJson(res, status, { ok: false, error: { code, message } });
+}
+
+function checkRateLimit(key, cooldownMs) {
+  const now = Date.now();
+  const lastAt = rateLimits.get(key) || 0;
+  const retryAfterMs = cooldownMs - (now - lastAt);
+  if (retryAfterMs > 0) {
+    return {
+      allowed: false,
+      retryAfterMs,
+      retryAfterSeconds: Math.ceil(retryAfterMs / 1000)
+    };
+  }
+  rateLimits.set(key, now);
+  return { allowed: true, retryAfterMs: 0, retryAfterSeconds: 0 };
 }
 
 async function readBody(req) {
@@ -345,6 +363,11 @@ async function handleApi(req, res, url) {
     if (!region) return fail(res, 400, "INVALID_REGION", "유효하지 않은 지역입니다.");
     if (!validChoices.has(body.choiceId)) return fail(res, 400, "INVALID_CHOICE", "유효하지 않은 선택입니다.");
 
+    const choiceLimit = checkRateLimit(`choice:${participantId}:${question.id}`, choiceCooldownMs);
+    if (!choiceLimit.allowed) {
+      return fail(res, 429, "RATE_LIMITED", `${choiceLimit.retryAfterSeconds}초 후 다시 선택해 주세요.`);
+    }
+
     const now = new Date().toISOString();
 
     if (hasSupabase()) {
@@ -451,6 +474,11 @@ async function handleApi(req, res, url) {
 
     if (!question) return fail(res, 404, "QUESTION_NOT_FOUND", "질문을 찾을 수 없습니다.");
     if (!text) return fail(res, 400, "EMPTY_REACTION", "반응 내용을 입력해 주세요.");
+
+    const reactionLimit = checkRateLimit(`reaction:${participantId}:${question.id}`, reactionCooldownMs);
+    if (!reactionLimit.allowed) {
+      return fail(res, 429, "RATE_LIMITED", `${reactionLimit.retryAfterSeconds}초 후 다시 남겨주세요.`);
+    }
 
     if (hasSupabase()) {
       await insertSupabaseReaction({
