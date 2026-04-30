@@ -478,21 +478,8 @@
     .map-panel {
       display: grid;
       grid-template-rows: auto auto 1fr;
-      position: relative;
       min-height: 0;
       overflow: hidden;
-    }
-
-    .map-reaction-card {
-      position: absolute;
-      right: 42px;
-      bottom: 16px;
-      z-index: 4;
-      width: min(318px, calc(100% - 32px));
-      min-height: 0;
-      padding: 14px;
-      background: rgba(255, 255, 255, 0.88);
-      backdrop-filter: blur(12px);
     }
 
     .map-head {
@@ -656,11 +643,6 @@
         overflow: visible;
       }
 
-      .map-reaction-card {
-        position: static;
-        width: auto;
-        margin: 0 12px 12px;
-      }
     }
 
     @media (max-width: 720px) {
@@ -800,17 +782,6 @@
         <div class="map-body">
           <div id="map"></div>
         </div>
-        <div class="banner-card reaction-card map-reaction-card">
-          <div>
-            <div class="banner-eyebrow">LIVE REACTIONS</div>
-            <h3 class="banner-title">응원하기</h3>
-          </div>
-          <form class="reaction-form" id="reaction-form">
-            <input class="reaction-input" id="reaction-input" maxlength="36" placeholder="우리 동네 왜 짬뽕이냐" autocomplete="off" />
-            <button class="reaction-submit" type="submit">남기기</button>
-          </form>
-          <div class="reaction-list" id="reaction-list" aria-live="polite"></div>
-        </div>
       </section>
 
       <aside class="panel banner-panel" aria-label="제휴 및 리포트 영역">
@@ -825,6 +796,18 @@
           <div class="banner-eyebrow">SPONSOR</div>
           <h3 class="banner-title">지역 선택 리포트</h3>
           <p class="banner-copy">브랜드, 매장, 지역 단체와 연결할 수 있는 제휴 배너 자리입니다.</p>
+        </div>
+
+        <div class="banner-card reaction-card">
+          <div>
+            <div class="banner-eyebrow">LIVE REACTIONS</div>
+            <h3 class="banner-title">응원하기</h3>
+          </div>
+          <form class="reaction-form" id="reaction-form">
+            <input class="reaction-input" id="reaction-input" maxlength="36" placeholder="우리 동네 왜 짬뽕이냐" autocomplete="off" />
+            <button class="reaction-submit" type="submit">남기기</button>
+          </form>
+          <div class="reaction-list" id="reaction-list" aria-live="polite"></div>
         </div>
 
       </aside>
