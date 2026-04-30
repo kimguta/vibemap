@@ -1105,6 +1105,7 @@
     const activeQuestionId = "lunch-jjajang-jjamppong";
     let activeScopeName = "전국";
     let activeChoiceId = null;
+    let remoteReactions = null;
 
     const defaultReactions = [
       { text: "우리 동네는 오늘 짜장 분위기네", region: "전국", choice: "짜장면", createdAt: "샘플" },
@@ -1171,6 +1172,7 @@
     }
 
     function loadReactions() {
+      if (Array.isArray(remoteReactions) && remoteReactions.length > 0) return remoteReactions;
       try {
         const saved = JSON.parse(window.localStorage.getItem(reactionStorageKey) || "[]");
         return Array.isArray(saved) && saved.length > 0 ? saved : defaultReactions;
@@ -1181,6 +1183,19 @@
 
     function saveReactions(reactions) {
       window.localStorage.setItem(reactionStorageKey, JSON.stringify(reactions.slice(0, 20)));
+    }
+
+    async function fetchReactionsFromApi() {
+      try {
+        const response = await fetch("/api/reactions?limit=6");
+        const payload = await response.json();
+        if (payload.ok && Array.isArray(payload.data)) {
+          remoteReactions = payload.data;
+          renderReactions();
+        }
+      } catch {
+        // 정적 미리보기나 DB 미설정 환경에서는 브라우저 저장 반응을 그대로 쓴다.
+      }
     }
 
     function formatReactionTime(value) {
@@ -1211,9 +1226,32 @@
       });
     }
 
-    function addReaction(text) {
+    async function addReaction(text) {
       const cleanText = text.trim().replace(/\s+/g, " ").slice(0, 36);
       if (!cleanText) return;
+
+      try {
+        const response = await fetch("/api/reactions", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            questionId: activeQuestionId,
+            participantId: getParticipantId(),
+            region: activeScopeName,
+            choice: currentChoiceLabel(),
+            text: cleanText
+          })
+        });
+        const payload = await response.json();
+        if (payload.ok && Array.isArray(payload.data)) {
+          remoteReactions = payload.data;
+          renderReactions();
+          return;
+        }
+      } catch {
+        // API가 없으면 로컬 저장으로 동작한다.
+      }
+
       const reactions = loadReactions().filter((reaction) => reaction.createdAt !== "샘플");
       reactions.unshift({
         text: cleanText,
@@ -1648,6 +1686,7 @@
     applyStoredSupportChoice();
     renderNational();
     renderReactions();
+    fetchReactionsFromApi();
     updateReactionCount();
   </script>
 </body>

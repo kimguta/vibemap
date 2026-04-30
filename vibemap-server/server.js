@@ -10,7 +10,13 @@ const projectRoot = resolve(__dirname, "..");
 const dbPath = join(__dirname, "data", "vibemap-db.json");
 const port = Number(process.env.PORT || 8788);
 const host = process.env.HOST || "0.0.0.0";
+const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, "");
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 let memoryDb = null;
+
+function hasSupabase() {
+  return Boolean(supabaseUrl && supabaseKey);
+}
 
 const contentTypes = {
   ".html": "text/html; charset=utf-8",
@@ -37,6 +43,28 @@ async function saveDb(db) {
   } catch (error) {
     console.warn(`Vibemap dev server is using memory storage only: ${error.code || error.message}`);
   }
+}
+
+async function supabaseRequest(path, options = {}) {
+  if (!hasSupabase()) throw new Error("Supabase is not configured");
+  const response = await fetch(`${supabaseUrl}/rest/v1${path}`, {
+    ...options,
+    headers: {
+      apikey: supabaseKey,
+      authorization: `Bearer ${supabaseKey}`,
+      "content-type": "application/json",
+      ...(options.headers || {})
+    }
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Supabase ${response.status}: ${body}`);
+  }
+
+  if (response.status === 204) return null;
+  const text = await response.text();
+  return text ? JSON.parse(text) : null;
 }
 
 function sendJson(res, status, payload) {
@@ -128,6 +156,91 @@ function makeParticipantId(req) {
   return `weak-${createHash("sha256").update(raw).digest("hex").slice(0, 24)}`;
 }
 
+function toApiChoice(choiceId) {
+  return choiceId === "gray" ? "undecided" : choiceId;
+}
+
+function toClientChoice(choiceId) {
+  return choiceId === "undecided" ? "gray" : choiceId;
+}
+
+async function upsertSupabaseChoice({ req, question, region, period, participantId, choiceId }) {
+  const now = new Date().toISOString();
+  await supabaseRequest("/participants?on_conflict=id", {
+    method: "POST",
+    headers: { prefer: "resolution=merge-duplicates" },
+    body: JSON.stringify({
+      id: participantId,
+      user_agent: req.headers["user-agent"] || "",
+      ip_hash: makeParticipantId(req),
+      last_seen_at: now
+    })
+  });
+
+  const existing = await supabaseRequest(
+    `/participant_choices?question_id=eq.${encodeURIComponent(question.id)}&participant_id=eq.${encodeURIComponent(participantId)}&region_id=eq.${encodeURIComponent(region.id)}&period=eq.${encodeURIComponent(period)}&select=choice_id`
+  );
+  const previousChoiceId = existing?.[0]?.choice_id ? toClientChoice(existing[0].choice_id) : null;
+  const dbChoiceId = toApiChoice(choiceId);
+
+  await supabaseRequest("/participant_choices?on_conflict=question_id,participant_id,region_id,period", {
+    method: "POST",
+    headers: { prefer: "resolution=merge-duplicates" },
+    body: JSON.stringify({
+      question_id: question.id,
+      participant_id: participantId,
+      region_id: region.id,
+      period,
+      choice_id: dbChoiceId,
+      updated_at: now
+    })
+  });
+
+  await supabaseRequest("/choice_events", {
+    method: "POST",
+    headers: { prefer: "return=minimal" },
+    body: JSON.stringify({
+      question_id: question.id,
+      participant_id: participantId,
+      region_id: region.id,
+      period,
+      previous_choice_id: previousChoiceId ? toApiChoice(previousChoiceId) : null,
+      choice_id: dbChoiceId,
+      source: "web"
+    })
+  });
+
+  return { previousChoiceId, updatedAt: now };
+}
+
+async function getSupabaseReactions(limit = 6) {
+  const rows = await supabaseRequest(
+    `/reactions?select=text,region_name,choice_label,created_at&order=created_at.desc&limit=${limit}`
+  );
+  return rows.map((row) => ({
+    text: row.text,
+    region: row.region_name,
+    choice: row.choice_label,
+    createdAt: row.created_at
+  }));
+}
+
+async function insertSupabaseReaction({ questionId, participantId, regionName, choiceLabel, text }) {
+  const cleanText = text.trim().replace(/\s+/g, " ").slice(0, 36);
+  if (!cleanText) throw new Error("Reaction text is empty");
+  await supabaseRequest("/reactions", {
+    method: "POST",
+    headers: { prefer: "return=minimal" },
+    body: JSON.stringify({
+      question_id: questionId,
+      participant_id: participantId,
+      region_name: regionName,
+      choice_label: choiceLabel,
+      text: cleanText
+    })
+  });
+}
+
 async function handleApi(req, res, url) {
   if (req.method === "OPTIONS") {
     return sendJson(res, 204, {});
@@ -136,7 +249,12 @@ async function handleApi(req, res, url) {
   const db = await loadDb();
 
   if (url.pathname === "/api/health") {
-    return ok(res, { status: "ready", service: "vibemap", time: new Date().toISOString() });
+    return ok(res, {
+      status: "ready",
+      service: "picked",
+      storage: hasSupabase() ? "supabase" : "local-json",
+      time: new Date().toISOString()
+    });
   }
 
   if (url.pathname === "/api/questions" && req.method === "GET") {
@@ -228,6 +346,28 @@ async function handleApi(req, res, url) {
     if (!validChoices.has(body.choiceId)) return fail(res, 400, "INVALID_CHOICE", "유효하지 않은 선택입니다.");
 
     const now = new Date().toISOString();
+
+    if (hasSupabase()) {
+      const result = await upsertSupabaseChoice({
+        req,
+        question,
+        region,
+        period,
+        participantId,
+        choiceId: body.choiceId
+      });
+      return ok(res, {
+        questionId: question.id,
+        participantId,
+        regionId: region.id,
+        period,
+        previousChoiceId: result.previousChoiceId,
+        choiceId: body.choiceId,
+        updatedAt: result.updatedAt,
+        storage: "supabase"
+      });
+    }
+
     let participant = db.participants.find((item) => item.id === participantId);
     if (!participant) {
       participant = {
@@ -292,6 +432,53 @@ async function handleApi(req, res, url) {
     });
   }
 
+  if (url.pathname === "/api/reactions" && req.method === "GET") {
+    if (hasSupabase()) {
+      return ok(res, await getSupabaseReactions(Number(url.searchParams.get("limit") || 6)));
+    }
+
+    const reactions = db.reactions || [];
+    return ok(res, reactions.slice(-Number(url.searchParams.get("limit") || 6)).reverse());
+  }
+
+  if (url.pathname === "/api/reactions" && req.method === "POST") {
+    const body = await readBody(req);
+    const question = getQuestion(db, body.questionId);
+    const participantId = body.participantId || makeParticipantId(req);
+    const regionName = String(body.region || "전국").slice(0, 32);
+    const choiceLabel = String(body.choice || "선택 전").slice(0, 20);
+    const text = String(body.text || "").trim().replace(/\s+/g, " ").slice(0, 36);
+
+    if (!question) return fail(res, 404, "QUESTION_NOT_FOUND", "질문을 찾을 수 없습니다.");
+    if (!text) return fail(res, 400, "EMPTY_REACTION", "반응 내용을 입력해 주세요.");
+
+    if (hasSupabase()) {
+      await insertSupabaseReaction({
+        questionId: question.id,
+        participantId,
+        regionName,
+        choiceLabel,
+        text
+      });
+      return ok(res, await getSupabaseReactions(6));
+    }
+
+    const reaction = {
+      id: randomUUID(),
+      questionId: question.id,
+      participantId,
+      region: regionName,
+      choice: choiceLabel,
+      text,
+      createdAt: new Date().toISOString()
+    };
+    db.reactions = db.reactions || [];
+    db.reactions.push(reaction);
+    db.reactions = db.reactions.slice(-100);
+    await saveDb(db);
+    return ok(res, db.reactions.slice(-6).reverse());
+  }
+
   return fail(res, 404, "NOT_FOUND", "API 경로를 찾을 수 없습니다.");
 }
 
@@ -329,5 +516,5 @@ const server = createServer(async (req, res) => {
 
 server.listen(port, host, () => {
   const displayHost = host === "0.0.0.0" ? "127.0.0.1" : host;
-  console.log(`Vibemap server ready: http://${displayHost}:${port}/minsimp-map-prototype.html`);
+  console.log(`picked server ready: http://${displayHost}:${port}/minsimp-map-prototype.html`);
 });
