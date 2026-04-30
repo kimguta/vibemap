@@ -4,6 +4,19 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>picked | 핃</title>
+  <meta name="description" content="오늘 점심은 짜장 vs 짬뽕? 지역별 선택 흐름을 바로 확인해보세요." />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="picked" />
+  <meta property="og:title" content="picked | 오늘 점심은 짜장 vs 짬뽕?" />
+  <meta property="og:description" content="지역별 선택 흐름을 바로 확인해보세요." />
+  <meta property="og:url" content="https://kimguta.github.io/vibemap/minsimp-map-prototype.html" />
+  <meta property="og:image" content="https://kimguta.github.io/vibemap/assets/picked-og.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="picked | 오늘 점심은 짜장 vs 짬뽕?" />
+  <meta name="twitter:description" content="지역별 선택 흐름을 바로 확인해보세요." />
+  <meta name="twitter:image" content="https://kimguta.github.io/vibemap/assets/picked-og.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
@@ -814,14 +827,15 @@
 
       .map-body {
         min-height: 58vh;
-        padding: 6px 6px 10px;
+        padding: 16px 6px 20px;
         place-items: center;
       }
 
       .map-head {
         align-items: center;
-        gap: 8px;
-        padding-top: 12px;
+        gap: 12px;
+        padding-top: 14px;
+        padding-bottom: 14px;
       }
 
       .map-actions {
@@ -835,8 +849,19 @@
         padding-right: 12px;
       }
 
+      .region-tabs {
+        gap: 9px;
+        padding-bottom: 14px;
+      }
+
+      .region-tabs .chip {
+        height: 34px;
+        padding: 0 14px;
+        font-size: 13px;
+      }
+
       .active-region-badge {
-        margin: 0 12px 4px;
+        margin: 2px 12px 8px;
       }
 
       .issue-question {
