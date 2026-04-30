@@ -406,6 +406,72 @@
       font-size: 20px;
     }
 
+    .reaction-card {
+      display: grid;
+      gap: 10px;
+    }
+
+    .reaction-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+    }
+
+    .reaction-input {
+      min-width: 0;
+      height: 36px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.86);
+      color: var(--ink);
+      font: inherit;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .reaction-input:focus {
+      border-color: var(--accent-line);
+      box-shadow: 0 0 0 3px rgba(191, 208, 255, 0.38);
+    }
+
+    .reaction-submit {
+      height: 36px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--ink);
+      color: #fff;
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+    }
+
+    .reaction-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .reaction-item {
+      padding: 9px 10px;
+      border: 1px solid rgba(216, 225, 238, 0.85);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    .reaction-text {
+      margin: 0 0 5px;
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .reaction-meta {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.3;
+    }
+
     .map-panel {
       display: grid;
       grid-template-rows: auto auto 1fr;
@@ -728,10 +794,17 @@
           <p class="banner-copy">브랜드, 매장, 지역 단체와 연결할 수 있는 제휴 배너 자리입니다.</p>
         </div>
 
-        <div class="banner-card">
-          <div class="banner-eyebrow">TREND</div>
-          <h3 class="banner-title">팽팽한 지역 TOP 5</h3>
-          <p class="banner-copy">선택 결과를 바탕으로 오늘 가장 팽팽한 지역을 보여줍니다.</p>
+        <div class="banner-card reaction-card">
+          <div>
+            <div class="banner-eyebrow">LIVE REACTIONS</div>
+            <h3 class="banner-title">한 줄 반응</h3>
+            <p class="banner-copy">댓글 없이 짧게만 남기는 지역 반응입니다.</p>
+          </div>
+          <form class="reaction-form" id="reaction-form">
+            <input class="reaction-input" id="reaction-input" maxlength="36" placeholder="우리 동네 왜 짬뽕이냐" autocomplete="off" />
+            <button class="reaction-submit" type="submit">남기기</button>
+          </form>
+          <div class="reaction-list" id="reaction-list" aria-live="polite"></div>
         </div>
       </aside>
     </main>
@@ -906,9 +979,20 @@
     const localSummaryLabel = document.querySelector("#local-summary-label");
     const localSummaryTotal = document.querySelector("#local-summary-total");
     const supportButtons = Array.from(document.querySelectorAll(".support"));
+    const reactionForm = document.querySelector("#reaction-form");
+    const reactionInput = document.querySelector("#reaction-input");
+    const reactionList = document.querySelector("#reaction-list");
     const supportStorageKey = "minsim-map-support-choice";
     const participantStorageKey = "vibemap-participant-id";
+    const reactionStorageKey = "picked-short-reactions";
     const activeQuestionId = "lunch-jjajang-jjamppong";
+    let activeScopeName = "전국";
+
+    const defaultReactions = [
+      { text: "우리 동네는 오늘 짜장 분위기네", region: "전국", choice: "짜장면", createdAt: "샘플" },
+      { text: "짬뽕 쪽이 은근 강하다", region: "부산", choice: "짬뽕", createdAt: "샘플" },
+      { text: "아직 못 정한 사람이 많아서 재밌음", region: "경기", choice: "아직 못 정함", createdAt: "샘플" }
+    ];
 
     const currentLocation = {
       province: "경기",
@@ -949,6 +1033,65 @@
         setCookie(participantStorageKey, participantId);
       }
       return participantId;
+    }
+
+    function currentChoiceLabel() {
+      return normalizeSupportChoice(window.localStorage.getItem(supportStorageKey) || getCookie(supportStorageKey)) || "선택 전";
+    }
+
+    function loadReactions() {
+      try {
+        const saved = JSON.parse(window.localStorage.getItem(reactionStorageKey) || "[]");
+        return Array.isArray(saved) && saved.length > 0 ? saved : defaultReactions;
+      } catch {
+        return defaultReactions;
+      }
+    }
+
+    function saveReactions(reactions) {
+      window.localStorage.setItem(reactionStorageKey, JSON.stringify(reactions.slice(0, 20)));
+    }
+
+    function formatReactionTime(value) {
+      if (value === "샘플") return "샘플";
+      const diff = Date.now() - new Date(value).getTime();
+      if (!Number.isFinite(diff) || diff < 0) return "방금";
+      const minutes = Math.floor(diff / 60000);
+      if (minutes < 1) return "방금";
+      if (minutes < 60) return `${minutes}분 전`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `${hours}시간 전`;
+      return `${Math.floor(hours / 24)}일 전`;
+    }
+
+    function renderReactions() {
+      reactionList.innerHTML = "";
+      loadReactions().slice(0, 5).forEach((reaction) => {
+        const item = document.createElement("div");
+        const text = document.createElement("p");
+        const meta = document.createElement("div");
+        item.className = "reaction-item";
+        text.className = "reaction-text";
+        meta.className = "reaction-meta";
+        text.textContent = reaction.text;
+        meta.textContent = `${reaction.region} · ${reaction.choice} · ${formatReactionTime(reaction.createdAt)}`;
+        item.append(text, meta);
+        reactionList.appendChild(item);
+      });
+    }
+
+    function addReaction(text) {
+      const cleanText = text.trim().replace(/\s+/g, " ").slice(0, 36);
+      if (!cleanText) return;
+      const reactions = loadReactions().filter((reaction) => reaction.createdAt !== "샘플");
+      reactions.unshift({
+        text: cleanText,
+        region: activeScopeName,
+        choice: currentChoiceLabel(),
+        createdAt: new Date().toISOString()
+      });
+      saveReactions(reactions);
+      renderReactions();
     }
 
     function choiceIdFromLabel(label) {
@@ -1084,6 +1227,7 @@
     }
 
     function updateSubtitle(name, stat) {
+      activeScopeName = name;
       subtitle.textContent = stat.party === "gray"
         ? `${name} · ${stat.label} · ${countSummary(stat)} · 최근 7일 참여 ${stat.total.toLocaleString()}명`
         : `${name} · ${stat.label} · 선택 차이 ${stat.diff.toFixed(1)}%p · ${countSummary(stat)} · 최근 7일 참여 ${stat.total.toLocaleString()}명`;
@@ -1265,6 +1409,12 @@
       });
     });
 
+    reactionForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      addReaction(reactionInput.value);
+      reactionInput.value = "";
+    });
+
     supportButtons.forEach((button) => {
       button.addEventListener("click", () => {
         const wasSelected = button.classList.contains("selected");
@@ -1298,6 +1448,7 @@
     updateLocalSummary();
     applyStoredSupportChoice();
     renderNational();
+    renderReactions();
   </script>
 </body>
 </html>
