@@ -485,7 +485,7 @@
       flex: 1;
       min-height: 0;
       max-height: none;
-      overflow: visible;
+      overflow: hidden;
     }
 
     .reaction-item {
@@ -1266,6 +1266,7 @@
       : "";
     const choiceCooldownMs = 0;
     const reactionCooldownMs = 30000;
+    const reactionRenderLimit = 18;
     const choiceCooldownKey = "picked-choice-cooldown-at";
     const reactionCooldownKey = "picked-reaction-cooldown-at";
     let activeScopeName = "전국";
@@ -1502,7 +1503,7 @@
 
     async function fetchReactionsFromApi() {
       try {
-        const response = await fetch(apiUrl("/api/reactions?limit=6"));
+        const response = await fetch(apiUrl(`/api/reactions?limit=${reactionRenderLimit}`));
         const payload = await response.json();
         if (payload.ok && Array.isArray(payload.data)) {
           remoteReactions = payload.data;
@@ -1533,7 +1534,7 @@
 
     function renderReactions() {
       reactionList.innerHTML = "";
-      const reactions = loadReactions().slice(0, 6);
+      const reactions = loadReactions().slice(0, reactionRenderLimit).reverse();
       if (!reactions.length) {
         const empty = document.createElement("div");
         empty.className = "reaction-item";

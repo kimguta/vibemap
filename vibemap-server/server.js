@@ -16,6 +16,7 @@ let memoryDb = null;
 const rateLimits = new Map();
 const choiceCooldownMs = 0;
 const reactionCooldownMs = 30000;
+const reactionResponseLimit = 18;
 
 function hasSupabase() {
   return Boolean(supabaseUrl && supabaseKey);
@@ -825,12 +826,13 @@ async function handleApi(req, res, url) {
   }
 
   if (url.pathname === "/api/reactions" && req.method === "GET") {
+    const limit = Math.min(40, Math.max(1, Number(url.searchParams.get("limit") || reactionResponseLimit)));
     if (hasSupabase()) {
-      return ok(res, await getSupabaseReactions(Number(url.searchParams.get("limit") || 6)));
+      return ok(res, await getSupabaseReactions(limit));
     }
 
     const reactions = db.reactions || [];
-    return ok(res, reactions.slice(-Number(url.searchParams.get("limit") || 6)).reverse());
+    return ok(res, reactions.slice(-limit).reverse());
   }
 
   if (url.pathname === "/api/reactions" && req.method === "POST") {
@@ -857,7 +859,7 @@ async function handleApi(req, res, url) {
         choiceLabel,
         text
       });
-      return ok(res, await getSupabaseReactions(6));
+      return ok(res, await getSupabaseReactions(reactionResponseLimit));
     }
 
     const reaction = {
@@ -873,7 +875,7 @@ async function handleApi(req, res, url) {
     db.reactions.push(reaction);
     db.reactions = db.reactions.slice(-100);
     await saveDb(db);
-    return ok(res, db.reactions.slice(-6).reverse());
+    return ok(res, db.reactions.slice(-reactionResponseLimit).reverse());
   }
 
   return fail(res, 404, "NOT_FOUND", "API 경로를 찾을 수 없습니다.");
