@@ -405,6 +405,37 @@ async function upsertSupabaseChoice({ req, question, region, period, participant
   return { previousChoiceId, previousRegionId, unchanged: false, updatedAt: now };
 }
 
+async function deleteSupabaseChoice({ question, period, participantId }) {
+  const now = new Date().toISOString();
+  const existingRows = await supabaseRequest(
+    `/participant_choices?question_id=eq.${encodeURIComponent(question.id)}&participant_id=eq.${encodeURIComponent(participantId)}&period=eq.${encodeURIComponent(period)}&select=region_id,choice_id,updated_at`
+  );
+  const previous = dedupeChoiceRows(
+    existingRows.map((row) => ({
+      ...row,
+      question_id: question.id,
+      participant_id: participantId,
+      period
+    })),
+    question.id,
+    period
+  )[0] || null;
+  const previousChoiceId = previous?.choice_id ? toClientChoice(previous.choice_id) : null;
+  const previousRegionId = previous?.region_id || null;
+
+  if (existingRows?.length) {
+    await supabaseRequest(
+      `/participant_choices?question_id=eq.${encodeURIComponent(question.id)}&participant_id=eq.${encodeURIComponent(participantId)}&period=eq.${encodeURIComponent(period)}`,
+      {
+        method: "DELETE",
+        headers: { prefer: "return=minimal" }
+      }
+    );
+  }
+
+  return { previousChoiceId, previousRegionId, unchanged: !previousChoiceId, updatedAt: now };
+}
+
 async function getSupabaseReactions(limit = 6) {
   const rows = await supabaseRequest(
     `/reactions?select=text,region_name,choice_label,created_at&order=created_at.desc&limit=${limit}`
@@ -606,7 +637,7 @@ async function handleApi(req, res, url) {
     return ok(res, { question, region, period, items: snapshots, storage: hasSupabase() ? "supabase" : "local-json" });
   }
 
-  if (url.pathname === "/api/choices" && req.method === "POST") {
+  if (url.pathname === "/api/choices" && (req.method === "POST" || req.method === "DELETE")) {
     const body = await readBody(req);
     const question = getQuestion(db, body.questionId);
     const regionName = body.region || body.regionName || "수원시";
@@ -626,7 +657,9 @@ async function handleApi(req, res, url) {
 
     if (!question) return fail(res, 404, "QUESTION_NOT_FOUND", "질문을 찾을 수 없습니다.");
     if (!region) return fail(res, 400, "INVALID_REGION", "유효하지 않은 지역입니다.");
-    if (!validChoices.has(body.choiceId)) return fail(res, 400, "INVALID_CHOICE", "유효하지 않은 선택입니다.");
+    if (req.method === "POST" && !validChoices.has(body.choiceId)) {
+      return fail(res, 400, "INVALID_CHOICE", "유효하지 않은 선택입니다.");
+    }
 
     const choiceLimit = checkRateLimit(`choice:${participantId}:${question.id}`, choiceCooldownMs);
     if (!choiceLimit.allowed) {
@@ -636,6 +669,26 @@ async function handleApi(req, res, url) {
     const now = new Date().toISOString();
 
     if (hasSupabase()) {
+      if (req.method === "DELETE") {
+        const result = await deleteSupabaseChoice({
+          question,
+          period,
+          participantId
+        });
+        return ok(res, {
+          questionId: question.id,
+          participantId,
+          regionId: result.previousRegionId || region.id,
+          period,
+          previousChoiceId: result.previousChoiceId,
+          previousRegionId: result.previousRegionId,
+          choiceId: null,
+          unchanged: result.unchanged,
+          updatedAt: result.updatedAt,
+          storage: "supabase"
+        });
+      }
+
       const result = await upsertSupabaseChoice({
         req,
         question,
@@ -679,6 +732,36 @@ async function handleApi(req, res, url) {
     ));
     const previousChoiceId = existing?.choiceId || null;
     const previousRegionId = existing?.regionId || null;
+
+    if (req.method === "DELETE") {
+      if (existing) {
+        db.choices = db.choices.filter((item) => item !== existing);
+        db.events.push({
+          id: randomUUID(),
+          questionId: question.id,
+          participantId,
+          regionId: previousRegionId || region.id,
+          period,
+          previousChoiceId,
+          previousRegionId,
+          choiceId: null,
+          createdAt: now,
+          source: "web"
+        });
+        await saveDb(db);
+      }
+      return ok(res, {
+        questionId: question.id,
+        participantId,
+        regionId: previousRegionId || region.id,
+        period,
+        previousChoiceId,
+        previousRegionId,
+        choiceId: null,
+        unchanged: !existing,
+        updatedAt: now
+      });
+    }
 
     if (existing?.regionId === region.id && existing.choiceId === body.choiceId) {
       return ok(res, {

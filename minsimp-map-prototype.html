@@ -96,18 +96,7 @@
     .app {
       min-height: 100vh;
       display: grid;
-      grid-template-rows: auto minmax(0, 1fr);
-    }
-
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 7px 18px;
-      border-bottom: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.82);
-      backdrop-filter: blur(14px);
+      grid-template-rows: minmax(0, 1fr);
     }
 
     .brand {
@@ -199,7 +188,7 @@
       }
 
       main {
-        min-height: calc(100vh - 59px);
+        min-height: 100vh;
         overflow: visible;
       }
 
@@ -236,6 +225,8 @@
       align-content: start;
       gap: 14px;
       min-width: 0;
+      height: calc(100vh - 28px);
+      min-height: 620px;
     }
 
     .section {
@@ -420,11 +411,13 @@
       flex-direction: column;
       gap: 12px;
       min-height: 100%;
+      height: 100%;
     }
 
     .reaction-form {
       display: grid;
       gap: 8px;
+      margin-top: auto;
     }
 
     .reaction-input-wrap {
@@ -486,7 +479,10 @@
 
     .reaction-list {
       display: grid;
+      align-content: end;
       gap: 8px;
+      flex: 1;
+      min-height: 0;
       max-height: none;
       overflow: visible;
     }
@@ -496,6 +492,7 @@
       border: 1px solid rgba(216, 225, 238, 0.85);
       border-radius: 14px;
       background: rgba(255, 255, 255, 0.7);
+      animation: bubbleIn 180ms ease both;
     }
 
     .reaction-text {
@@ -622,9 +619,9 @@
     }
 
     .region-popover {
-      position: absolute;
+      position: fixed;
       left: 50%;
-      bottom: 22px;
+      top: 50%;
       z-index: 10;
       width: min(330px, calc(100% - 32px));
       padding: 16px;
@@ -632,7 +629,8 @@
       border-radius: 18px;
       background: rgba(255, 255, 255, 0.96);
       box-shadow: 0 18px 42px rgba(22, 34, 53, 0.14);
-      transform: translateX(-50%);
+      transform: translate(-50%, -50%);
+      animation: modalIn 180ms ease both;
     }
 
     .region-popover[hidden] {
@@ -721,7 +719,7 @@
       font-weight: 500;
       line-height: 1.2;
       cursor: pointer;
-      transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+      transition: transform 160ms ease, filter 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
       box-shadow: none;
     }
 
@@ -730,8 +728,10 @@
     }
 
     .tile.selected {
-      outline: 3px solid rgba(22, 34, 53, 0.18);
-      outline-offset: 3px;
+      outline: 3px solid rgba(22, 34, 53, 0.5);
+      outline-offset: 4px;
+      filter: drop-shadow(0 10px 18px rgba(22, 34, 53, 0.18));
+      transform: translateY(-2px) scale(1.04);
     }
 
     .tile.blue {
@@ -758,6 +758,37 @@
     .tile.gray {
       background: #f1f1f1;
       color: #8a94a6;
+    }
+
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: translate(-50%, calc(-50% + 8px));
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    @keyframes bubbleIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 1ms !important;
+        transition-duration: 1ms !important;
+      }
     }
 
     .tile.empty {
@@ -807,6 +838,8 @@
 
       .right-rail {
         order: 3;
+        height: auto;
+        min-height: 520px;
       }
 
     }
@@ -887,11 +920,24 @@
 
       .region-popover {
         position: fixed;
-        left: 12px;
-        right: 12px;
-        bottom: 12px;
-        width: auto;
-        transform: none;
+        left: 50%;
+        top: auto;
+        right: auto;
+        bottom: 14px;
+        width: min(380px, calc(100% - 24px));
+        transform: translateX(-50%);
+        animation-name: sheetIn;
+      }
+
+      @keyframes sheetIn {
+        from {
+          opacity: 0;
+          transform: translate(-50%, 10px);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-50%, 0);
+        }
       }
 
       .tile.offset {
@@ -920,13 +966,6 @@
     </defs>
   </svg>
   <div class="app">
-    <header>
-      <div class="brand">
-        <h1>picked</h1>
-        <span>핃 · 지역별 선택 흐름</span>
-      </div>
-    </header>
-
     <main>
       <aside class="panel">
         <section class="section issue-card" aria-label="현재 이슈">
@@ -952,7 +991,7 @@
           <h3>오늘의 요약</h3>
           <div class="metric-list">
             <div class="metric"><span>현재 참여</span><strong id="national-summary-total">0</strong></div>
-            <div class="metric"><span id="local-summary-label">선택 화면 흐름</span><strong id="local-summary-total">-</strong></div>
+            <div class="metric"><span id="local-summary-label">선택 화면 흐름</span><strong id="local-summary-total">집계 전</strong></div>
             <div class="metric"><span>팽팽한 지역</span><strong id="close-region-total">9곳</strong></div>
             <div class="metric"><span>참여 부족</span><strong id="low-volume-total">4곳</strong></div>
           </div>
@@ -1008,6 +1047,7 @@
             <div class="banner-eyebrow">LIVE REACTIONS</div>
             <h3 class="banner-title">응원하기</h3>
           </div>
+          <div class="reaction-list" id="reaction-list" aria-live="polite"></div>
           <form class="reaction-form" id="reaction-form">
             <div class="reaction-input-wrap">
               <input class="reaction-input" id="reaction-input" maxlength="36" placeholder="우리 동네 왜 짬뽕이냐" autocomplete="off" />
@@ -1016,7 +1056,6 @@
             <button class="reaction-submit" type="submit">남기기</button>
             <div class="reaction-status" id="reaction-status" aria-live="polite"></div>
           </form>
-          <div class="reaction-list" id="reaction-list" aria-live="polite"></div>
         </div>
       </div>
     </main>
@@ -1334,18 +1373,18 @@
     function updateMyRegionDisplay() {
       if (!myRegion?.regionName) {
         currentLocationLabel.textContent = "내 지역 : 선택 전";
-        currentLocationNote.textContent = "지도에서 지역을 누른 뒤 내 지역으로 선택해 주세요.";
+        currentLocationNote.textContent = "지도에서 지역을 클릭한 뒤 내 지역으로 선택해 주세요.";
         return;
       }
       currentLocationLabel.textContent = `내 지역 : ${displayRegionName(myRegion.regionName)}`;
-      currentLocationNote.textContent = "이 지역 기준으로 투표와 응원이 반영됩니다.";
+      currentLocationNote.textContent = "이 지역 기준으로 투표와 응원이 반영됩니다. 다른 지역으로 바꾸려면 지도를 클릭해 선택해 주세요.";
     }
 
     function updateLocalSummary() {
       updateMyRegionDisplay();
       nationalSummaryTotal.textContent = "0";
       localSummaryLabel.textContent = selectedRegionName === "전국" ? "현재 화면 흐름" : `${displayRegionName(selectedRegionName)} 흐름`;
-      localSummaryTotal.textContent = selectedRegionStat?.label || "-";
+      localSummaryTotal.textContent = selectedRegionStat?.label || "집계 전";
     }
 
     async function fetchSummaryFromApi() {
@@ -1359,7 +1398,7 @@
           updateSelectedSummary(selectedRegionName, selectedRegionStat);
         } else {
           localSummaryLabel.textContent = payload.data.localLabel || `${displayRegionName(scopeRegion)} 흐름`;
-          localSummaryTotal.textContent = payload.data.localTrendLabel || "-";
+          localSummaryTotal.textContent = payload.data.localTrendLabel || "집계 전";
         }
         closeRegionTotal.textContent = `${Number(payload.data.closeRegionsCount || 0).toLocaleString()}곳`;
         lowVolumeTotal.textContent = `${Number(payload.data.lowVolumeRegionsCount || 0).toLocaleString()}곳`;
@@ -1674,7 +1713,7 @@
     }
 
     async function syncChoiceToApi(choiceId, regionRecord = myRegion) {
-      if (!regionRecord?.regionName || !choiceId) return false;
+      if (!regionRecord?.regionName) return false;
       const waitSeconds = cooldownSeconds(choiceCooldownKey, choiceCooldownMs);
       if (waitSeconds > 0) {
         shareStatus.textContent = `${waitSeconds}초 후 다시 저장됩니다`;
@@ -1688,7 +1727,7 @@
 
       try {
         const response = await fetch(apiUrl("/api/choices"), {
-          method: "POST",
+          method: choiceId ? "POST" : "DELETE",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
             questionId: activeQuestionId,
@@ -1714,6 +1753,13 @@
             };
             saveMyRegion(updatedRecord);
             saveUserVoteRecord(updatedRecord);
+          } else if (!choiceId) {
+            saveUserVoteRecord({
+              regionId: regionRecord.regionId || regionKey(regionRecord.regionName),
+              regionName: regionRecord.regionName,
+              parentRegion: regionRecord.parentRegion,
+              choice: null
+            });
           }
           remoteStatsByName.clear();
           const activeRegion = document.querySelector(".region-tabs .chip.active")?.dataset.region || "전국";
@@ -2173,24 +2219,28 @@
         const choice = button.textContent.trim();
         const nextChoice = choiceIdFromLabel(choice);
         const previous = userVoteRecord || {};
-        if (previous.regionName === myRegion.regionName && previous.choice === nextChoice) {
-          applyStoredSupportChoice();
-          return;
-        }
+        const isDeselect = previous.regionName === myRegion.regionName && previous.choice === nextChoice;
+        const finalChoice = isDeselect ? null : nextChoice;
+        const savedChoice = isDeselect ? "" : choice;
 
         const result = applyVoteMove({
           previousRegionId: previous.regionId || null,
           nextRegionId: myRegion.regionId || regionKey(myRegion.regionName),
           previousChoice: previous.choice || null,
-          nextChoice,
+          nextChoice: finalChoice,
           nextRegionName: myRegion.regionName,
           nextParentRegion: myRegion.parentRegion
         });
         if (!result.changed) return;
 
-        window.localStorage.setItem(supportStorageKey, choice);
-        setCookie(supportStorageKey, choice);
-        await syncChoiceToApi(nextChoice, myRegion);
+        if (savedChoice) {
+          window.localStorage.setItem(supportStorageKey, savedChoice);
+          setCookie(supportStorageKey, savedChoice);
+        } else {
+          window.localStorage.removeItem(supportStorageKey);
+          setCookie(supportStorageKey, "");
+        }
+        await syncChoiceToApi(finalChoice, myRegion);
         refreshActiveView();
       });
     });
