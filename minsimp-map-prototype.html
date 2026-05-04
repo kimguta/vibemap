@@ -189,6 +189,7 @@
 
       main {
         min-height: 100vh;
+        grid-template-rows: 100vh;
         overflow: visible;
       }
 
@@ -222,11 +223,11 @@
 
     .right-rail {
       display: grid;
-      align-content: start;
+      align-content: stretch;
       gap: 14px;
       min-width: 0;
-      height: calc(100vh - 28px);
-      min-height: 620px;
+      height: 100vh;
+      min-height: 100vh;
     }
 
     .section {
@@ -838,6 +839,11 @@
 
       .right-rail {
         order: 3;
+        height: auto;
+        min-height: 520px;
+      }
+
+      .reaction-card {
         height: auto;
         min-height: 520px;
       }
