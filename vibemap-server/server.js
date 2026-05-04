@@ -14,7 +14,7 @@ const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, "");
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 let memoryDb = null;
 const rateLimits = new Map();
-const choiceCooldownMs = 3000;
+const choiceCooldownMs = 0;
 const reactionCooldownMs = 30000;
 
 function hasSupabase() {
@@ -333,15 +333,31 @@ async function upsertSupabaseChoice({ req, question, region, period, participant
     })
   });
 
-  const existing = await supabaseRequest(
-    `/participant_choices?question_id=eq.${encodeURIComponent(question.id)}&participant_id=eq.${encodeURIComponent(participantId)}&region_id=eq.${encodeURIComponent(region.id)}&period=eq.${encodeURIComponent(period)}&select=choice_id`
+  const existingRows = await supabaseRequest(
+    `/participant_choices?question_id=eq.${encodeURIComponent(question.id)}&participant_id=eq.${encodeURIComponent(participantId)}&period=eq.${encodeURIComponent(period)}&select=region_id,choice_id`
   );
-  const previousChoiceId = existing?.[0]?.choice_id ? toClientChoice(existing[0].choice_id) : null;
+  const previous = existingRows?.[0] || null;
+  const previousChoiceId = previous?.choice_id ? toClientChoice(previous.choice_id) : null;
+  const previousRegionId = previous?.region_id || null;
   const dbChoiceId = toApiChoice(choiceId);
 
-  await supabaseRequest("/participant_choices?on_conflict=question_id,participant_id,region_id,period", {
+  if (previousRegionId === region.id && previousChoiceId === choiceId) {
+    return { previousChoiceId, previousRegionId, unchanged: true, updatedAt: now };
+  }
+
+  if (existingRows?.length) {
+    await supabaseRequest(
+      `/participant_choices?question_id=eq.${encodeURIComponent(question.id)}&participant_id=eq.${encodeURIComponent(participantId)}&period=eq.${encodeURIComponent(period)}`,
+      {
+        method: "DELETE",
+        headers: { prefer: "return=minimal" }
+      }
+    );
+  }
+
+  await supabaseRequest("/participant_choices", {
     method: "POST",
-    headers: { prefer: "resolution=merge-duplicates" },
+    headers: { prefer: "return=minimal" },
     body: JSON.stringify({
       question_id: question.id,
       participant_id: participantId,
@@ -366,7 +382,7 @@ async function upsertSupabaseChoice({ req, question, region, period, participant
     })
   });
 
-  return { previousChoiceId, updatedAt: now };
+  return { previousChoiceId, previousRegionId, unchanged: false, updatedAt: now };
 }
 
 async function getSupabaseReactions(limit = 6) {
@@ -613,7 +629,9 @@ async function handleApi(req, res, url) {
         regionId: region.id,
         period,
         previousChoiceId: result.previousChoiceId,
+        previousRegionId: result.previousRegionId,
         choiceId: body.choiceId,
+        unchanged: result.unchanged,
         updatedAt: result.updatedAt,
         storage: "supabase"
       });
@@ -636,13 +654,29 @@ async function handleApi(req, res, url) {
     const existing = db.choices.find((item) => (
       item.questionId === question.id &&
       item.participantId === participantId &&
-      item.regionId === region.id &&
       item.period === period
     ));
     const previousChoiceId = existing?.choiceId || null;
+    const previousRegionId = existing?.regionId || null;
+
+    if (existing?.regionId === region.id && existing.choiceId === body.choiceId) {
+      return ok(res, {
+        questionId: question.id,
+        participantId,
+        regionId: region.id,
+        period,
+        previousChoiceId,
+        previousRegionId,
+        choiceId: body.choiceId,
+        unchanged: true,
+        updatedAt: existing.updatedAt
+      });
+    }
 
     if (existing) {
       existing.previousChoiceId = previousChoiceId;
+      existing.previousRegionId = previousRegionId;
+      existing.regionId = region.id;
       existing.choiceId = body.choiceId;
       existing.updatedAt = now;
     } else {
@@ -666,6 +700,7 @@ async function handleApi(req, res, url) {
       regionId: region.id,
       period,
       previousChoiceId,
+      previousRegionId,
       choiceId: body.choiceId,
       createdAt: now,
       source: "web"
@@ -678,7 +713,9 @@ async function handleApi(req, res, url) {
       regionId: region.id,
       period,
       previousChoiceId,
+      previousRegionId,
       choiceId: body.choiceId,
+      unchanged: false,
       updatedAt: now
     });
   }

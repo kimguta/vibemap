@@ -158,14 +158,6 @@
       line-height: 1.4;
     }
 
-    .period-tabs {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .period-chip,
     .chip {
       height: 28px;
       padding: 0 10px;
@@ -178,22 +170,19 @@
       font-size: 12px;
     }
 
-    .period-chip:hover,
     .chip:hover,
-    .period-chip.active,
     .chip.active {
       background: var(--accent);
       border-color: var(--accent-line);
     }
 
-    .period-chip.active,
     .chip.active {
       transform: translateY(1px);
     }
 
     main {
       display: grid;
-      grid-template-columns: 300px minmax(0, 1fr) 312px;
+      grid-template-columns: 292px minmax(0, 1fr) 372px;
       gap: 14px;
       padding: 14px;
       min-height: 0;
@@ -222,8 +211,8 @@
     .panel {
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 22px;
-      box-shadow: 0 18px 50px rgba(22, 34, 53, 0.07);
+      border-radius: 18px;
+      box-shadow: 0 14px 38px rgba(22, 34, 53, 0.05);
       min-width: 0;
       transition: background 180ms ease, border-color 180ms ease;
     }
@@ -274,49 +263,16 @@
     }
 
     .local-card {
-      padding: 11px 12px;
+      padding: 12px;
       border: 1px solid var(--line);
-      border-radius: 16px;
-      background: #eef3f9;
+      border-radius: 14px;
+      background: #f6f8fb;
     }
 
     .local-card strong {
       display: block;
       margin-bottom: 4px;
       font-size: 19px;
-    }
-
-    .location-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .location-button {
-      flex: 0 0 auto;
-      height: 30px;
-      padding: 0 10px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: #fff;
-      color: var(--ink);
-      cursor: pointer;
-      font-size: 12px;
-    }
-
-    .location-button:disabled {
-      cursor: wait;
-      opacity: 0.65;
-    }
-
-    .location-status {
-      min-width: 0;
-      color: var(--muted);
-      font-size: 11px;
-      line-height: 1.35;
-      text-align: right;
     }
 
     .support-buttons {
@@ -405,19 +361,11 @@
       line-height: 1.45;
     }
 
-    .banner-panel {
-      display: grid;
-      align-content: start;
-      gap: 12px;
-      padding: 14px;
-      overflow: visible;
-    }
-
     .banner-card {
       min-height: 132px;
       padding: 16px;
       border: 1px solid rgba(216, 225, 238, 0.95);
-      border-radius: 18px;
+      border-radius: 16px;
       background: rgba(255, 255, 255, 0.72);
     }
 
@@ -468,8 +416,10 @@
     }
 
     .reaction-card {
-      display: grid;
-      gap: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 100%;
     }
 
     .reaction-form {
@@ -537,8 +487,8 @@
     .reaction-list {
       display: grid;
       gap: 8px;
-      max-height: 286px;
-      overflow: hidden;
+      max-height: none;
+      overflow: visible;
     }
 
     .reaction-item {
@@ -664,10 +614,70 @@
     }
 
     .map-body {
+      position: relative;
       min-height: 0;
       padding: 16px 20px 20px;
       display: grid;
       place-items: center;
+    }
+
+    .region-popover {
+      position: absolute;
+      left: 50%;
+      bottom: 22px;
+      z-index: 10;
+      width: min(330px, calc(100% - 32px));
+      padding: 16px;
+      border: 1px solid rgba(216, 225, 238, 0.95);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 18px 42px rgba(22, 34, 53, 0.14);
+      transform: translateX(-50%);
+    }
+
+    .region-popover[hidden] {
+      display: none;
+    }
+
+    .region-popover-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .region-popover strong {
+      display: block;
+      font-size: 17px;
+      line-height: 1.25;
+    }
+
+    .region-popover p {
+      margin: 8px 0 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .region-popover-close {
+      width: 28px;
+      height: 28px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .region-select-button {
+      width: 100%;
+      height: 38px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--ink);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 600;
     }
 
     #map {
@@ -799,11 +809,6 @@
         order: 3;
       }
 
-      .banner-panel {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        overflow: visible;
-      }
-
     }
 
     @media (max-width: 720px) {
@@ -816,10 +821,6 @@
         padding: 8px 12px;
       }
 
-      .period-tabs {
-        display: none;
-      }
-
       main {
         gap: 10px;
         padding: 10px;
@@ -827,7 +828,7 @@
 
       .map-body {
         min-height: 58vh;
-        padding: 16px 6px 20px;
+        padding: 24px 6px 28px;
         place-items: center;
       }
 
@@ -868,10 +869,6 @@
         font-size: 19px;
       }
 
-      .banner-panel {
-        grid-template-columns: 1fr;
-      }
-
       #map { padding: 2px; }
 
       .cartogram { padding-right: 24px; }
@@ -887,6 +884,15 @@
       .cols-five { grid-template-columns: repeat(3, var(--tile-size)); }
 
       .tile { font-size: 11px; padding: 6px 8px; }
+
+      .region-popover {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        width: auto;
+        transform: none;
+      }
 
       .tile.offset {
         transform: translateX(calc((var(--tile-size) + var(--tile-gap-x)) * 0.5));
@@ -919,12 +925,6 @@
         <h1>picked</h1>
         <span>핃 · 지역별 선택 흐름</span>
       </div>
-      <div class="period-tabs" aria-label="기간 선택">
-        <button class="period-chip" data-period="1d" type="button">1일</button>
-        <button class="period-chip active" data-period="7d" type="button">7일</button>
-        <button class="period-chip" data-period="30d" type="button">30일</button>
-        <button class="period-chip" data-period="1y" type="button">1년</button>
-      </div>
     </header>
 
     <main>
@@ -936,14 +936,10 @@
         </section>
 
         <section class="section">
-          <h2>내 접속 지역</h2>
+          <h2>내 지역</h2>
           <div class="local-card">
-            <strong id="current-location-label">경기도 수원시</strong>
-            <div class="muted" id="current-location-note">기본 지역으로 표시 중입니다.</div>
-            <div class="location-row">
-              <button class="location-button" id="location-button" type="button">내 위치 확인</button>
-              <div class="location-status" id="location-status" aria-live="polite"></div>
-            </div>
+            <strong id="current-location-label">내 지역 : 선택 전</strong>
+            <div class="muted" id="current-location-note">지도에서 지역을 누른 뒤 내 지역으로 선택해 주세요.</div>
           </div>
           <div class="support-buttons" aria-label="반응 선택">
             <button class="support blue" type="button">짜장면</button>
@@ -995,24 +991,18 @@
         </div>
         <div class="map-body">
           <div id="map"></div>
+          <div class="region-popover" id="region-popover" hidden>
+            <div class="region-popover-head">
+              <strong id="popover-region-name">지역 결과</strong>
+              <button class="region-popover-close" id="region-popover-close" type="button" aria-label="닫기">×</button>
+            </div>
+            <p id="popover-result">지역 결과를 확인 중입니다.</p>
+            <button class="region-select-button" id="set-my-region-button" type="button">내 지역으로 선택</button>
+          </div>
         </div>
       </section>
 
       <div class="right-rail">
-        <aside class="panel banner-panel" aria-label="제휴 및 리포트 영역">
-          <div class="banner-card featured">
-            <div class="banner-eyebrow">TODAY BRIEF</div>
-            <h3 class="banner-title" id="brief-title">오늘 점심 선택이 가장 팽팽한 지역</h3>
-            <p class="banner-copy" id="brief-copy">지역을 선택하면 짜장과 짬뽕 흐름을 바로 볼 수 있습니다.</p>
-            <div class="banner-stat"><span id="brief-stat-label">선택 차이</span><strong id="brief-stat-value">-</strong></div>
-          </div>
-
-          <div class="banner-card">
-            <div class="banner-eyebrow">SPONSOR</div>
-            <p class="banner-copy">브랜드, 매장, 지역 단체와 연결할 수 있는 제휴 배너 자리입니다.</p>
-          </div>
-        </aside>
-
         <div class="banner-card reaction-card">
           <div>
             <div class="banner-eyebrow">LIVE REACTIONS</div>
@@ -1200,8 +1190,6 @@
     const tabs = document.querySelector("#region-tabs");
     const currentLocationLabel = document.querySelector("#current-location-label");
     const currentLocationNote = document.querySelector("#current-location-note");
-    const locationButton = document.querySelector("#location-button");
-    const locationStatus = document.querySelector("#location-status");
     const nationalSummaryTotal = document.querySelector("#national-summary-total");
     const localSummaryLabel = document.querySelector("#local-summary-label");
     const localSummaryTotal = document.querySelector("#local-summary-total");
@@ -1216,19 +1204,22 @@
     const reactionList = document.querySelector("#reaction-list");
     const shareButton = document.querySelector("#share-button");
     const shareStatus = document.querySelector("#share-status");
-    const briefTitle = document.querySelector("#brief-title");
-    const briefCopy = document.querySelector("#brief-copy");
-    const briefStatLabel = document.querySelector("#brief-stat-label");
-    const briefStatValue = document.querySelector("#brief-stat-value");
+    const regionPopover = document.querySelector("#region-popover");
+    const popoverRegionName = document.querySelector("#popover-region-name");
+    const popoverResult = document.querySelector("#popover-result");
+    const popoverClose = document.querySelector("#region-popover-close");
+    const setMyRegionButton = document.querySelector("#set-my-region-button");
     const supportStorageKey = "minsim-map-support-choice";
+    const userVoteRecordStorageKey = "picked-user-vote-record";
+    const myRegionStorageKey = "picked-my-region";
     const participantStorageKey = "vibemap-participant-id";
     const reactionStorageKey = "picked-short-reactions";
-    const selectedRegionStorageKey = "picked-selected-region";
+    const viewedRegionStorageKey = "picked-viewed-region";
     const activeQuestionId = "lunch-jjajang-jjamppong";
     const apiBaseUrl = window.location.hostname.endsWith("github.io")
       ? "https://vibemap-z2vx.onrender.com"
       : "";
-    const choiceCooldownMs = 3000;
+    const choiceCooldownMs = 0;
     const reactionCooldownMs = 30000;
     const choiceCooldownKey = "picked-choice-cooldown-at";
     const reactionCooldownKey = "picked-reaction-cooldown-at";
@@ -1236,8 +1227,12 @@
     let activeChoiceId = null;
     let remoteReactions = null;
     let reactionCooldownTimer = null;
-    let selectedRegionName = window.localStorage.getItem(selectedRegionStorageKey) || "전국";
+    let selectedRegionName = window.localStorage.getItem(viewedRegionStorageKey) || "전국";
     let selectedRegionStat = null;
+    let pendingRegionName = null;
+    let pendingRegionStat = null;
+    let myRegion = loadMyRegion();
+    let userVoteRecord = loadUserVoteRecord();
     const remoteStatsByName = new Map();
     let remoteMapRefreshTimer = null;
 
@@ -1245,37 +1240,7 @@
       return `${apiBaseUrl}${path}`;
     }
 
-    const defaultReactions = [
-      { text: "우리 동네는 오늘 짜장 분위기네", region: "전국", choice: "짜장면", createdAt: "샘플" },
-      { text: "짬뽕 쪽이 은근 강하다", region: "부산", choice: "짬뽕", createdAt: "샘플" },
-      { text: "아직 못 정한 사람이 많아서 재밌음", region: "경기", choice: "아직 못 정함", createdAt: "샘플" }
-    ];
-
-    const currentLocation = {
-      province: "경기",
-      city: "수원시",
-      source: "default"
-    };
-
-    const locationCandidates = [
-      { province: "서울", city: "서울", lat: 37.5665, lon: 126.9780 },
-      { province: "부산", city: "부산", lat: 35.1796, lon: 129.0756 },
-      { province: "대구", city: "대구", lat: 35.8714, lon: 128.6014 },
-      { province: "인천", city: "인천", lat: 37.4563, lon: 126.7052 },
-      { province: "광주", city: "광주", lat: 35.1595, lon: 126.8526 },
-      { province: "대전", city: "대전", lat: 36.3504, lon: 127.3845 },
-      { province: "울산", city: "울산", lat: 35.5384, lon: 129.3114 },
-      { province: "세종", city: "세종", lat: 36.4800, lon: 127.2890 },
-      { province: "경기", city: "수원시", lat: 37.2636, lon: 127.0286 },
-      { province: "강원", city: "춘천시", lat: 37.8813, lon: 127.7298 },
-      { province: "충북", city: "청주시", lat: 36.6424, lon: 127.4890 },
-      { province: "충남", city: "천안시", lat: 36.8151, lon: 127.1139 },
-      { province: "전북", city: "전주시", lat: 35.8242, lon: 127.1480 },
-      { province: "전남", city: "목포시", lat: 34.8118, lon: 126.3922 },
-      { province: "경북", city: "안동시", lat: 36.5684, lon: 128.7294 },
-      { province: "경남", city: "창원시", lat: 35.2279, lon: 128.6811 },
-      { province: "제주", city: "제주시", lat: 33.4996, lon: 126.5312 }
-    ];
+    const defaultReactions = [];
 
     const regionParentMap = {};
 
@@ -1305,91 +1270,95 @@
       return "아직 선택이 많지 않습니다";
     }
 
-    function formatLocationLabel(provinceName, cityName) {
-      if (provinceName === "서울" || provinceName === "세종" || provinceName === cityName) {
-        return `${provinceName} ${cityName}`;
+    function regionKey(name) {
+      return String(name || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^\w가-힣-]/g, "");
+    }
+
+    function parentForRegion(name) {
+      if (!name || name === "전국") return null;
+      return regionParentMap[name] || (provinceTabs.includes(name) ? name : null);
+    }
+
+    function makeRegionRecord(name) {
+      if (!name || name === "전국") return null;
+      return {
+        regionId: regionKey(name),
+        regionName: name,
+        parentRegion: parentForRegion(name)
+      };
+    }
+
+    function loadUserVoteRecord() {
+      try {
+        const saved = JSON.parse(window.localStorage.getItem(userVoteRecordStorageKey) || "null");
+        if (saved && saved.regionName) return saved;
+      } catch {
+        // 손상된 저장값은 없는 값처럼 다룬다.
       }
-      return `${provinceName}도 ${cityName}`;
+      return null;
     }
 
-    function distanceScore(lat, lon, candidate) {
-      const latDiff = lat - candidate.lat;
-      const lonDiff = (lon - candidate.lon) * Math.cos(lat * Math.PI / 180);
-      return latDiff * latDiff + lonDiff * lonDiff;
+    function loadMyRegion() {
+      try {
+        const saved = JSON.parse(window.localStorage.getItem(myRegionStorageKey) || "null");
+        if (saved && saved.regionName) return saved;
+      } catch {
+        // 손상된 저장값은 없는 값처럼 다룬다.
+      }
+      return null;
     }
 
-    function nearestLocation(lat, lon) {
-      return locationCandidates
-        .map((candidate) => ({ ...candidate, score: distanceScore(lat, lon, candidate) }))
-        .sort((a, b) => a.score - b.score)[0];
+    function saveMyRegion(regionRecord) {
+      myRegion = regionRecord;
+      if (regionRecord) {
+        window.localStorage.setItem(myRegionStorageKey, JSON.stringify(regionRecord));
+      } else {
+        window.localStorage.removeItem(myRegionStorageKey);
+      }
+      updateMyRegionDisplay();
     }
 
-    function applyCurrentLocation(location, source = "detected") {
-      currentLocation.province = location.province;
-      currentLocation.city = location.city;
-      currentLocation.source = source;
-      updateLocalSummary();
-      fetchSummaryFromApi();
-      refreshActiveView();
+    function saveUserVoteRecord(record) {
+      userVoteRecord = record?.regionName || record?.choice ? record : null;
+      if (userVoteRecord) {
+        window.localStorage.setItem(userVoteRecordStorageKey, JSON.stringify(userVoteRecord));
+      } else {
+        window.localStorage.removeItem(userVoteRecordStorageKey);
+      }
     }
 
-    function setLocationStatus(message = "") {
-      locationStatus.textContent = message;
-    }
-
-    function requestCurrentLocation() {
-      if (!navigator.geolocation) {
-        currentLocationNote.textContent = "이 브라우저에서는 위치 확인을 지원하지 않습니다.";
-        setLocationStatus("");
+    function updateMyRegionDisplay() {
+      if (!myRegion?.regionName) {
+        currentLocationLabel.textContent = "내 지역 : 선택 전";
+        currentLocationNote.textContent = "지도에서 지역을 누른 뒤 내 지역으로 선택해 주세요.";
         return;
       }
-
-      locationButton.disabled = true;
-      locationButton.textContent = "확인 중";
-      setLocationStatus("권한 확인 중");
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const matched = nearestLocation(position.coords.latitude, position.coords.longitude);
-          applyCurrentLocation(matched, "detected");
-          currentLocationNote.textContent = "브라우저 위치 기준으로 대략 표시 중입니다.";
-          setLocationStatus("반영됨");
-          locationButton.disabled = false;
-          locationButton.textContent = "다시 확인";
-          window.setTimeout(() => setLocationStatus(""), 1800);
-        },
-        () => {
-          currentLocationNote.textContent = "위치 권한이 꺼져 있어 기본 지역으로 표시 중입니다.";
-          setLocationStatus("");
-          locationButton.disabled = false;
-          locationButton.textContent = "내 위치 확인";
-        },
-        { enableHighAccuracy: false, timeout: 7000, maximumAge: 600000 }
-      );
+      currentLocationLabel.textContent = `내 지역 : ${displayRegionName(myRegion.regionName)}`;
+      currentLocationNote.textContent = "이 지역 기준으로 투표와 응원이 반영됩니다.";
     }
 
     function updateLocalSummary() {
-      const provinceName = currentLocation.province;
-      const cityName = currentLocation.city;
-      const provinceStat = statForName(provinceName);
-
-      currentLocationLabel.textContent = formatLocationLabel(provinceName, cityName);
-
-      nationalSummaryTotal.textContent = storedChoiceLabel() ? "1" : "0";
-      localSummaryLabel.textContent = `${provinceName} 흐름`;
-      localSummaryTotal.textContent = provinceStat.label;
+      updateMyRegionDisplay();
+      nationalSummaryTotal.textContent = "0";
+      localSummaryLabel.textContent = selectedRegionName === "전국" ? "현재 화면 흐름" : `${displayRegionName(selectedRegionName)} 흐름`;
+      localSummaryTotal.textContent = selectedRegionStat?.label || "-";
     }
 
     async function fetchSummaryFromApi() {
       try {
-        const response = await fetch(apiUrl(`/api/summary?questionId=${encodeURIComponent(activeQuestionId)}&period=7d&scopeRegion=${encodeURIComponent(currentLocation.province)}`));
+        const scopeRegion = myRegion?.parentRegion || myRegion?.regionName || selectedRegionName || "전국";
+        const response = await fetch(apiUrl(`/api/summary?questionId=${encodeURIComponent(activeQuestionId)}&period=7d&scopeRegion=${encodeURIComponent(scopeRegion)}`));
         const payload = await response.json();
         if (!payload.ok || !payload.data) return false;
         nationalSummaryTotal.textContent = Number(payload.data.nationalTotal || 0).toLocaleString();
         if (selectedRegionStat) {
           updateSelectedSummary(selectedRegionName, selectedRegionStat);
         } else {
-          localSummaryLabel.textContent = payload.data.localLabel || `${currentLocation.province} 흐름`;
+          localSummaryLabel.textContent = payload.data.localLabel || `${displayRegionName(scopeRegion)} 흐름`;
           localSummaryTotal.textContent = payload.data.localTrendLabel || "-";
         }
         closeRegionTotal.textContent = `${Number(payload.data.closeRegionsCount || 0).toLocaleString()}곳`;
@@ -1423,7 +1392,8 @@
     }
 
     function storedChoiceLabel() {
-      return normalizeSupportChoice(window.localStorage.getItem(supportStorageKey) || getCookie(supportStorageKey));
+      if (userVoteRecord?.choice) return choiceLabelFromId(userVoteRecord.choice);
+      return null;
     }
 
     function currentChoiceLabel() {
@@ -1518,7 +1488,15 @@
 
     function renderReactions() {
       reactionList.innerHTML = "";
-      loadReactions().slice(0, 6).forEach((reaction) => {
+      const reactions = loadReactions().slice(0, 6);
+      if (!reactions.length) {
+        const empty = document.createElement("div");
+        empty.className = "reaction-item";
+        empty.innerHTML = `<p class="reaction-text">아직 메시지가 없어요.</p><div class="reaction-meta">첫 번째 한마디를 남겨보세요.</div>`;
+        reactionList.appendChild(empty);
+        return;
+      }
+      reactions.forEach((reaction) => {
         const item = document.createElement("div");
         const text = document.createElement("p");
         const meta = document.createElement("div");
@@ -1526,7 +1504,7 @@
         text.className = "reaction-text";
         meta.className = "reaction-meta";
         text.textContent = reaction.text;
-        meta.textContent = `${reactionRegionName(reaction.region)} · ${reaction.choice} · ${formatReactionTime(reaction.createdAt)}`;
+        meta.textContent = `${reactionRegionName(reaction.region)} · ${formatReactionTime(reaction.createdAt)}`;
         item.append(text, meta);
         reactionList.appendChild(item);
       });
@@ -1535,6 +1513,10 @@
     async function addReaction(text) {
       const cleanText = text.trim().replace(/\s+/g, " ").slice(0, 36);
       if (!cleanText) return;
+      if (!myRegion?.regionName) {
+        setReactionStatus("먼저 지도에서 내 지역을 선택해 주세요.", true);
+        return;
+      }
       const waitSeconds = cooldownSeconds(reactionCooldownKey, reactionCooldownMs);
       if (waitSeconds > 0) {
         updateReactionCooldown();
@@ -1551,7 +1533,7 @@
           body: JSON.stringify({
             questionId: activeQuestionId,
             participantId: getParticipantId(),
-            region: displayRegionName(activeScopeName),
+            region: displayRegionName(myRegion.regionName),
             choice: currentChoiceLabel(),
             text: cleanText
           })
@@ -1573,7 +1555,7 @@
       const reactions = loadReactions().filter((reaction) => reaction.createdAt !== "샘플");
       reactions.unshift({
         text: cleanText,
-        region: displayRegionName(activeScopeName),
+        region: displayRegionName(myRegion.regionName),
         choice: currentChoiceLabel(),
         createdAt: new Date().toISOString()
       });
@@ -1667,7 +1649,32 @@
       return "gray";
     }
 
-    async function syncChoiceToApi(choiceLabel) {
+    function choiceLabelFromId(choiceId) {
+      if (choiceId === "blue") return "짜장면";
+      if (choiceId === "red") return "짬뽕";
+      if (choiceId === "gray") return "아직 못 정함";
+      return "선택 전";
+    }
+
+    function applyVoteMove({ previousRegionId, nextRegionId, previousChoice, nextChoice, nextRegionName, nextParentRegion }) {
+      if (previousRegionId === nextRegionId && previousChoice === nextChoice) {
+        return { changed: false, record: userVoteRecord };
+      }
+
+      const record = {
+        regionId: nextRegionId || null,
+        regionName: nextRegionName || myRegion?.regionName || null,
+        parentRegion: nextParentRegion || myRegion?.parentRegion || null,
+        choice: nextChoice || null
+      };
+      saveUserVoteRecord(record);
+      activeChoiceId = nextChoice || null;
+      applyStoredSupportChoice();
+      return { changed: true, record };
+    }
+
+    async function syncChoiceToApi(choiceId, regionRecord = myRegion) {
+      if (!regionRecord?.regionName || !choiceId) return false;
       const waitSeconds = cooldownSeconds(choiceCooldownKey, choiceCooldownMs);
       if (waitSeconds > 0) {
         shareStatus.textContent = `${waitSeconds}초 후 다시 저장됩니다`;
@@ -1686,10 +1693,10 @@
           body: JSON.stringify({
             questionId: activeQuestionId,
             participantId: getParticipantId(),
-            region: currentLocation.city,
-            parentRegion: currentLocation.province,
+            region: regionRecord.regionName,
+            parentRegion: regionRecord.parentRegion,
             period: "7d",
-            choiceId: choiceIdFromLabel(choiceLabel)
+            choiceId
           })
         });
         const payload = await response.json();
@@ -1698,15 +1705,27 @@
           return;
         }
         if (payload.ok) {
+          if (payload.data?.regionId) {
+            const updatedRecord = {
+              regionId: payload.data.regionId,
+              regionName: regionRecord.regionName,
+              parentRegion: regionRecord.parentRegion,
+              choice: choiceId
+            };
+            saveMyRegion(updatedRecord);
+            saveUserVoteRecord(updatedRecord);
+          }
           remoteStatsByName.clear();
           const activeRegion = document.querySelector(".region-tabs .chip.active")?.dataset.region || "전국";
           await fetchSummaryFromApi();
           const loaded = await fetchMapStats(activeRegion);
           if (loaded) renderRegion(activeRegion);
+          return true;
         }
       } catch {
         // 정적 미리보기에서는 API가 없을 수 있으므로 로컬 저장만 유지한다.
       }
+      return false;
     }
 
     function normalizeSupportChoice(choice) {
@@ -1717,10 +1736,11 @@
     }
 
     function applyStoredSupportChoice() {
-      const savedChoice = normalizeSupportChoice(window.localStorage.getItem(supportStorageKey) || getCookie(supportStorageKey));
+      const savedChoice = storedChoiceLabel();
       document.body.classList.remove("support-blue", "support-red", "support-gray");
+      supportButtons.forEach((button) => button.classList.remove("selected"));
       activeChoiceId = savedChoice ? choiceIdFromLabel(savedChoice) : null;
-      if (!savedChoice) return;
+      if (!savedChoice || savedChoice === "선택 전") return;
 
       supportButtons.forEach((button) => {
         button.classList.toggle("selected", button.textContent.trim() === savedChoice);
@@ -1782,27 +1802,8 @@
       }
     }
 
-    function choiceDeltaForName(name) {
-      if (!activeChoiceId) return null;
-      const provinceName = currentLocation.province;
-      const cityName = currentLocation.city;
-      const appliesToCurrentCity = name === cityName;
-      const appliesToCurrentProvince = name === provinceName;
-      if (!appliesToCurrentCity && !appliesToCurrentProvince) return null;
-      return activeChoiceId;
-    }
-
-    function applyChoiceDelta(counts, choiceId) {
-      if (!choiceId) return counts;
-      return {
-        blue: counts.blue + (choiceId === "blue" ? 1 : 0),
-        red: counts.red + (choiceId === "red" ? 1 : 0),
-        undecided: counts.undecided + (choiceId === "gray" ? 1 : 0)
-      };
-    }
-
     function countsFromStat(stat, name = "") {
-      if (stat.counts) return applyChoiceDelta(stat.counts, choiceDeltaForName(name));
+      if (stat.counts) return stat.counts;
       const total = stat.total || 0;
       const undecided = Math.max(0, Math.round(total * (stat.party === "gray" ? 0.58 : 0.16)));
       const decided = Math.max(0, total - undecided);
@@ -1825,7 +1826,7 @@
         red = decided - blue;
       }
 
-      return applyChoiceDelta({ blue, red, undecided }, choiceDeltaForName(name));
+      return { blue, red, undecided };
     }
 
     function countSummary(stat, name) {
@@ -1854,7 +1855,9 @@
       const total = totals.blue + totals.red + totals.undecided;
       const decided = Math.max(0, totals.blue + totals.red);
       const diff = decided > 0 ? Math.abs(totals.blue - totals.red) / decided * 100 : 0;
-      const party = diff <= 3
+      const party = total <= 0
+        ? "gray"
+        : diff <= 3
         ? "tie"
         : totals.blue > totals.red
           ? "blue"
@@ -1873,38 +1876,17 @@
     }
 
     function updateTodayBrief(name, stat) {
-      const counts = countsFromStat(stat, name);
-      const decided = counts.blue + counts.red;
-      const bluePct = decided > 0 ? counts.blue / decided * 100 : 0;
-      const redPct = decided > 0 ? counts.red / decided * 100 : 0;
-      const diff = Math.abs(bluePct - redPct);
-      const regionName = displayRegionName(name);
-      const leadingText = stat.party === "blue"
-        ? "짜장면 쪽으로 기울었습니다"
-        : stat.party === "red"
-          ? "짬뽕 쪽으로 기울었습니다"
-          : stat.party === "tie"
-            ? "거의 반반으로 나뉘고 있습니다"
-            : "아직 선택이 더 필요합니다";
-
-      briefTitle.textContent = stat.party === "tie"
-        ? "오늘 점심 선택이 가장 팽팽한 지역"
-        : `${regionName} 선택 흐름`;
-      briefCopy.textContent = decided > 0
-        ? `${regionName}은 짜장 ${bluePct.toFixed(0)}%, 짬뽕 ${redPct.toFixed(0)}%로 ${leadingText}.`
-        : `${regionName}은 아직 충분한 선택이 모이지 않았습니다.`;
-      briefStatLabel.textContent = "선택 차이";
-      briefStatValue.textContent = decided > 0 ? `${diff.toFixed(1)}%p` : "-";
+      return;
     }
 
     function updateSubtitle(name, stat) {
       activeScopeName = name;
       selectedRegionName = name;
       selectedRegionStat = stat;
-      window.localStorage.setItem(selectedRegionStorageKey, name);
+      window.localStorage.setItem(viewedRegionStorageKey, name);
       const regionName = displayRegionName(name);
       activeRegionLabel.textContent = regionName;
-      const total = stat.total + (choiceDeltaForName(name) ? 1 : 0);
+      const total = stat.total;
       subtitle.textContent = stat.party === "gray"
         ? `${regionName} · ${stat.label} · ${countSummary(stat, name)} · 최근 7일 참여 ${total.toLocaleString()}명`
         : `${regionName} · ${stat.label} · 선택 차이 ${stat.diff.toFixed(1)}%p · ${countSummary(stat, name)} · 최근 7일 참여 ${total.toLocaleString()}명`;
@@ -1914,6 +1896,59 @@
 
     function updateAggregateSubtitle(name, items) {
       updateSubtitle(name, aggregateStats(items));
+    }
+
+    function resultTextForPopover(name, stat) {
+      const counts = countsFromStat(stat, name);
+      const decided = counts.blue + counts.red;
+      const bluePct = decided > 0 ? Math.round(counts.blue / decided * 100) : 0;
+      const redPct = decided > 0 ? Math.round(counts.red / decided * 100) : 0;
+      if (stat.total <= 0) {
+        return "아직 선택이 없습니다. 이 지역을 내 지역으로 선택하고 첫 표를 남길 수 있어요.";
+      }
+      return `짜장 ${bluePct}% · 짬뽕 ${redPct}% · ${countSummary(stat, name)}`;
+    }
+
+    function showRegionPopover(name, stat) {
+      pendingRegionName = name;
+      pendingRegionStat = stat;
+      markSelected(name);
+      updateSubtitle(name, stat);
+      popoverRegionName.textContent = `${displayRegionName(name)} 결과`;
+      popoverResult.textContent = resultTextForPopover(name, stat);
+      setMyRegionButton.textContent = myRegion?.regionName === name ? "내 지역으로 선택됨" : "내 지역으로 선택";
+      regionPopover.hidden = false;
+    }
+
+    function hideRegionPopover() {
+      regionPopover.hidden = true;
+    }
+
+    async function selectPendingRegionAsMine() {
+      if (!pendingRegionName) return;
+      const nextRegion = makeRegionRecord(pendingRegionName);
+      const previous = userVoteRecord || {};
+      const nextChoice = previous.choice || activeChoiceId || null;
+      saveMyRegion(nextRegion);
+      const result = applyVoteMove({
+        previousRegionId: previous.regionId || null,
+        nextRegionId: nextRegion.regionId,
+        previousChoice: previous.choice || null,
+        nextChoice,
+        nextRegionName: nextRegion.regionName,
+        nextParentRegion: nextRegion.parentRegion
+      });
+      if (nextChoice && result.changed) {
+        await syncChoiceToApi(nextChoice, nextRegion);
+      } else {
+        shareStatus.textContent = "내 지역으로 선택됨";
+        window.setTimeout(() => {
+          shareStatus.textContent = "";
+        }, 1800);
+      }
+      hideRegionPopover();
+      updateLocalSummary();
+      renderReactions();
     }
 
     function setActiveTab(name) {
@@ -1996,7 +2031,7 @@
         "cols-dynamic",
         7,
         (name) => statForName(name, (provinceStats[name] || {}).party),
-        (name) => renderRegion(name)
+        (name, stat) => showRegionPopover(name, stat)
       );
       markSelected("");
       updateAggregateSubtitle("전국", nationalLayout);
@@ -2014,11 +2049,7 @@
           if (name === "서울") return statForName("서울");
           return statForName(name, (regions[name] || {}).party);
         },
-        (name, stat) => {
-          if (name === "서울") return renderSeoul();
-          markSelected(name);
-          updateSubtitle(name, stat);
-        }
+        (name, stat) => showRegionPopover(name, stat)
       );
       markSelected("");
       updateAggregateSubtitle("경기", gyeonggiLayout.filter((name) => name && name !== "서울"));
@@ -2033,10 +2064,7 @@
         "cols-7",
         7,
         (name, index) => statForName(name, ["blue", "red", "tie", "gray"][(name.length + index) % 4], index),
-        (name, stat) => {
-          markSelected(name);
-          updateSubtitle(name, stat);
-        }
+        (name, stat) => showRegionPopover(name, stat)
       );
       markSelected("");
       updateAggregateSubtitle("서울", seoulLayout);
@@ -2056,10 +2084,7 @@
         colsClass,
         cols,
         (tileName, index) => statForName(tileName, ["blue", "red", "tie", "gray"][(tileName.length + index) % 4], index),
-        (tileName, stat) => {
-          markSelected(tileName);
-          updateSubtitle(tileName, stat);
-        }
+        (tileName, stat) => showRegionPopover(tileName, stat)
       );
       markSelected("");
       updateAggregateSubtitle(name, items);
@@ -2114,13 +2139,6 @@
         tabs.appendChild(button);
       });
 
-    document.querySelectorAll(".period-chip").forEach((button) => {
-      button.addEventListener("click", () => {
-        document.querySelectorAll(".period-chip").forEach((item) => item.classList.remove("active"));
-        button.classList.add("active");
-      });
-    });
-
     reactionForm.addEventListener("submit", (event) => {
       event.preventDefault();
       addReaction(reactionInput.value);
@@ -2131,29 +2149,49 @@
     reactionInput.addEventListener("input", updateReactionCount);
 
     shareButton.addEventListener("click", shareCurrentView);
-    locationButton.addEventListener("click", requestCurrentLocation);
+    popoverClose.addEventListener("click", hideRegionPopover);
+    setMyRegionButton.addEventListener("click", selectPendingRegionAsMine);
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") hideRegionPopover();
+    });
+    document.addEventListener("click", (event) => {
+      if (regionPopover.hidden) return;
+      if (regionPopover.contains(event.target) || event.target.closest(".tile")) return;
+      hideRegionPopover();
+    });
 
     supportButtons.forEach((button) => {
-      button.addEventListener("click", () => {
-        const wasSelected = button.classList.contains("selected");
-        supportButtons.forEach((item) => item.classList.remove("selected"));
-
-        if (wasSelected) {
-          button.classList.add("selected");
-          applyStoredSupportChoice();
-          refreshActiveView();
+      button.addEventListener("click", async () => {
+        if (!myRegion?.regionName) {
+          shareStatus.textContent = "먼저 지도에서 내 지역을 선택해 주세요";
+          window.setTimeout(() => {
+            shareStatus.textContent = "";
+          }, 2200);
           return;
         }
 
         const choice = button.textContent.trim();
+        const nextChoice = choiceIdFromLabel(choice);
+        const previous = userVoteRecord || {};
+        if (previous.regionName === myRegion.regionName && previous.choice === nextChoice) {
+          applyStoredSupportChoice();
+          return;
+        }
 
-        button.classList.add("selected");
-        activeChoiceId = choiceIdFromLabel(choice);
+        const result = applyVoteMove({
+          previousRegionId: previous.regionId || null,
+          nextRegionId: myRegion.regionId || regionKey(myRegion.regionName),
+          previousChoice: previous.choice || null,
+          nextChoice,
+          nextRegionName: myRegion.regionName,
+          nextParentRegion: myRegion.parentRegion
+        });
+        if (!result.changed) return;
+
         window.localStorage.setItem(supportStorageKey, choice);
         setCookie(supportStorageKey, choice);
-        applyStoredSupportChoice();
+        await syncChoiceToApi(nextChoice, myRegion);
         refreshActiveView();
-        syncChoiceToApi(choice);
       });
     });
 
@@ -2168,6 +2206,13 @@
     });
 
     async function initializePage() {
+      if (!myRegion?.regionName && userVoteRecord?.regionName) {
+        saveMyRegion({
+          regionId: userVoteRecord.regionId || regionKey(userVoteRecord.regionName),
+          regionName: userVoteRecord.regionName,
+          parentRegion: userVoteRecord.parentRegion || parentForRegion(userVoteRecord.regionName)
+        });
+      }
       applyStoredSupportChoice();
       renderSavedRegion();
       const initialRegion = document.querySelector(".region-tabs .chip.active")?.dataset.region || "전국";
