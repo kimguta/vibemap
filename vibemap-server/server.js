@@ -218,9 +218,29 @@ function emptySnapshots(db, questionId, period) {
     }));
 }
 
+function rowUpdatedTime(row) {
+  return new Date(row.updatedAt || row.updated_at || row.createdAt || row.created_at || 0).getTime() || 0;
+}
+
+function dedupeChoiceRows(rows, questionId, period) {
+  const latestByParticipant = new Map();
+  for (const row of rows) {
+    const rowQuestionId = row.questionId || row.question_id;
+    const rowPeriod = row.period;
+    const participantId = row.participantId || row.participant_id;
+    if (rowQuestionId !== questionId || rowPeriod !== period || !participantId) continue;
+
+    const previous = latestByParticipant.get(participantId);
+    if (!previous || rowUpdatedTime(row) >= rowUpdatedTime(previous)) {
+      latestByParticipant.set(participantId, row);
+    }
+  }
+  return Array.from(latestByParticipant.values());
+}
+
 function applyChoiceDeltas(snapshots, db, questionId, period) {
   const byKey = new Map(snapshots.map((snapshot) => [snapshotKey(snapshot), { ...snapshot }]));
-  for (const choice of db.choices) {
+  for (const choice of dedupeChoiceRows(db.choices, questionId, period)) {
     if (choice.questionId !== questionId || choice.period !== period) continue;
     const key = `${choice.questionId}:${choice.period}:${choice.regionId}`;
     const snapshot = byKey.get(key);
@@ -234,7 +254,7 @@ function applyChoiceDeltas(snapshots, db, questionId, period) {
 
 function applyChoiceRows(snapshots, rows, questionId, period) {
   const byKey = new Map(snapshots.map((snapshot) => [snapshotKey(snapshot), { ...snapshot }]));
-  for (const row of rows) {
+  for (const row of dedupeChoiceRows(rows, questionId, period)) {
     const rowQuestionId = row.questionId || row.question_id;
     const rowPeriod = row.period;
     const regionId = row.regionId || row.region_id;
@@ -414,9 +434,10 @@ async function insertSupabaseReaction({ questionId, participantId, regionName, c
 }
 
 async function getSupabaseSummary(questionId, period, scopeRegionId) {
-  const rows = await supabaseRequest(
-    `/participant_choices?question_id=eq.${encodeURIComponent(questionId)}&period=eq.${encodeURIComponent(period)}&select=region_id,choice_id`
+  const rawRows = await supabaseRequest(
+    `/participant_choices?question_id=eq.${encodeURIComponent(questionId)}&period=eq.${encodeURIComponent(period)}&select=participant_id,region_id,choice_id,updated_at`
   );
+  const rows = dedupeChoiceRows(rawRows, questionId, period);
   const nationalTotal = rows.length;
   const localTotal = rows.filter((row) => row.region_id === scopeRegionId).length;
   const byRegion = new Map();
@@ -449,7 +470,7 @@ async function getSupabaseSummary(questionId, period, scopeRegionId) {
 
 async function getSupabaseSnapshots(db, questionId, period) {
   const rows = await supabaseRequest(
-    `/participant_choices?question_id=eq.${encodeURIComponent(questionId)}&period=eq.${encodeURIComponent(period)}&select=region_id,choice_id,question_id,period`
+    `/participant_choices?question_id=eq.${encodeURIComponent(questionId)}&period=eq.${encodeURIComponent(period)}&select=participant_id,region_id,choice_id,question_id,period,updated_at`
   );
   const snapshots = applyChoiceRows(emptySnapshots(db, questionId, period), rows, questionId, period)
     .map((snapshot) => decorateSnapshot(snapshot, db));
