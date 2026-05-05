@@ -1287,6 +1287,7 @@
     let userVoteRecord = loadUserVoteRecord();
     const remoteStatsByName = new Map();
     let remoteMapRefreshTimer = null;
+    let liveRefreshTimer = null;
 
     function apiUrl(path) {
       return `${apiBaseUrl}${path}`;
@@ -1403,7 +1404,7 @@
     async function fetchSummaryFromApi() {
       try {
         const scopeRegion = myRegion?.parentRegion || myRegion?.regionName || selectedRegionName || "전국";
-        const response = await fetch(apiUrl(`/api/summary?questionId=${encodeURIComponent(activeQuestionId)}&period=7d&scopeRegion=${encodeURIComponent(scopeRegion)}`));
+        const response = await fetch(apiUrl(`/api/summary?questionId=${encodeURIComponent(activeQuestionId)}&period=7d&scopeRegion=${encodeURIComponent(scopeRegion)}&t=${Date.now()}`), { cache: "no-store" });
         const payload = await response.json();
         if (!payload.ok || !payload.data) return false;
         nationalSummaryTotal.textContent = Number(payload.data.nationalTotal || 0).toLocaleString();
@@ -1509,7 +1510,7 @@
 
     async function fetchReactionsFromApi() {
       try {
-        const response = await fetch(apiUrl(`/api/reactions?limit=${reactionRenderLimit}`));
+        const response = await fetch(apiUrl(`/api/reactions?limit=${reactionRenderLimit}`), { cache: "no-store" });
         const payload = await response.json();
         if (payload.ok && Array.isArray(payload.data)) {
           remoteReactions = payload.data;
@@ -1849,7 +1850,7 @@
 
     async function fetchMapStats(regionName) {
       try {
-        const response = await fetch(apiUrl(`/api/map?questionId=${encodeURIComponent(activeQuestionId)}&period=7d&region=${encodeURIComponent(regionName)}`));
+        const response = await fetch(apiUrl(`/api/map?questionId=${encodeURIComponent(activeQuestionId)}&period=7d&region=${encodeURIComponent(regionName)}&t=${Date.now()}`), { cache: "no-store" });
         const payload = await response.json();
         if (!payload.ok || !Array.isArray(payload.data?.items)) return false;
         payload.data.items.forEach((item) => {
@@ -2173,6 +2174,32 @@
       }, 0);
     }
 
+    async function refreshLiveData() {
+      if (document.hidden) return;
+      const activeRegion = document.querySelector(".region-tabs .chip.active")?.dataset.region || "전국";
+      const previousSelectedRegion = selectedRegionName;
+      const [loaded] = await Promise.all([
+        fetchMapStats(activeRegion),
+        fetchSummaryFromApi(),
+        fetchReactionsFromApi()
+      ]);
+      if (!loaded) return;
+      renderRegion(activeRegion);
+      if (previousSelectedRegion !== activeRegion && previousSelectedRegion !== "전국") {
+        const stat = statForName(previousSelectedRegion, (regions[previousSelectedRegion] || provinceStats[previousSelectedRegion] || {}).party);
+        markSelected(previousSelectedRegion);
+        updateSubtitle(previousSelectedRegion, stat);
+      }
+    }
+
+    function startLiveRefresh() {
+      window.clearInterval(liveRefreshTimer);
+      liveRefreshTimer = window.setInterval(refreshLiveData, 4000);
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) refreshLiveData();
+      });
+    }
+
     function renderSavedRegion() {
       const savedRegion = selectedRegionName || "전국";
       const parentRegion = regionParentMap[savedRegion];
@@ -2293,6 +2320,7 @@
       }
       document.body.classList.remove("is-loading");
       fetchReactionsFromApi();
+      startLiveRefresh();
     }
 
     initializePage();
