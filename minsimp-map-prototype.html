@@ -230,13 +230,17 @@
     }
 
     body.support-blue .panel {
-      background: rgba(255, 255, 255, 0.96);
-      border-color: rgba(33, 23, 20, 0.18);
+      background:
+        linear-gradient(180deg, rgba(43, 32, 22, 0.72) 0%, rgba(8, 14, 27, 0.94) 48%),
+        var(--panel);
+      border-color: rgba(255, 190, 74, 0.24);
     }
 
     body.support-red .panel {
-      background: rgba(255, 255, 255, 0.96);
-      border-color: rgba(214, 40, 40, 0.18);
+      background:
+        linear-gradient(180deg, rgba(52, 18, 32, 0.72) 0%, rgba(8, 14, 27, 0.94) 48%),
+        var(--panel);
+      border-color: rgba(255, 45, 85, 0.24);
     }
 
     aside.panel {
