@@ -747,6 +747,7 @@
       font-weight: 500;
       line-height: 1.2;
       cursor: pointer;
+      position: relative;
       transition: transform 160ms ease, filter 180ms ease, box-shadow 180ms ease, opacity 180ms ease, background 180ms ease;
       box-shadow: 0 1px 0 rgba(23, 25, 31, 0.06);
     }
@@ -761,6 +762,33 @@
       outline-offset: 4px;
       filter: drop-shadow(0 8px 16px rgba(23, 25, 31, 0.18));
       transform: translateY(-2px) scale(1.035);
+    }
+
+    .tile.my-region {
+      outline: 3px solid #11151c;
+      outline-offset: 5px;
+      box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.92), 0 12px 24px rgba(23, 25, 31, 0.18);
+    }
+
+    .tile.my-region::after {
+      content: "내 지역";
+      position: absolute;
+      left: 50%;
+      bottom: 12px;
+      transform: translateX(-50%);
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.88);
+      color: #11151c;
+      font-size: 9px;
+      line-height: 1.2;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .tile.my-region.selected {
+      outline-color: #000;
+      filter: drop-shadow(0 12px 22px rgba(23, 25, 31, 0.24));
     }
 
     .tile.blue {
@@ -1405,6 +1433,7 @@
         window.localStorage.removeItem(myRegionStorageKey);
       }
       updateMyRegionDisplay();
+      markMyRegion();
     }
 
     function saveUserVoteRecord(record) {
@@ -2093,6 +2122,19 @@
       });
     }
 
+    function isMyRegionTile(name) {
+      if (!myRegion?.regionName || !name) return false;
+      if (name === myRegion.regionName) return true;
+      const parentRegion = myRegion.parentRegion || parentForRegion(myRegion.regionName);
+      return Boolean(parentRegion && name === parentRegion);
+    }
+
+    function markMyRegion() {
+      document.querySelectorAll(".tile[data-map-name]").forEach((tile) => {
+        tile.classList.toggle("my-region", isMyRegionTile(tile.dataset.mapName));
+      });
+    }
+
     function withCenteredPadding(items, cols) {
       const rows = [];
       for (let i = 0; i < items.length; i += cols) {
@@ -2145,6 +2187,7 @@
         const stat = resolver(name, index);
         tile.className = `tile ${stat.party}${offsetClass}${stackClass}`;
         tile.classList.toggle("selected", name === selectedRegionName);
+        tile.classList.toggle("my-region", isMyRegionTile(name));
         tile.dataset.mapName = name;
         tile.textContent = name;
         tile.addEventListener("click", () => onClick(name, stat));
