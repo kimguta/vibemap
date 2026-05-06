@@ -1512,8 +1512,9 @@
     }
 
     function loadMyRegion() {
+      const rawRegion = window.localStorage.getItem(myRegionStorageKey) || getCookie(myRegionStorageKey);
       try {
-        const saved = JSON.parse(window.localStorage.getItem(myRegionStorageKey) || "null");
+        const saved = JSON.parse(rawRegion || "null");
         if (saved && saved.regionName) {
           const parentRegion = saved.parentRegion || parentForRegion(saved.regionName);
           return {
@@ -1532,8 +1533,10 @@
       myRegion = regionRecord;
       if (regionRecord) {
         window.localStorage.setItem(myRegionStorageKey, JSON.stringify(regionRecord));
+        setCookie(myRegionStorageKey, JSON.stringify(regionRecord));
       } else {
         window.localStorage.removeItem(myRegionStorageKey);
+        setCookie(myRegionStorageKey, "");
       }
       updateMyRegionDisplay();
       markMyRegion();

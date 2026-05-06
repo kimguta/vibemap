@@ -159,8 +159,9 @@ function regionByName(db, name, parentName = null) {
     const parent = db.regions.find((region) => region.name === parentName || region.id === parentName);
     if (parent) {
       const scoped = matches.find((region) => region.parentId === parent.id);
-      if (scoped) return scoped;
+      return scoped || null;
     }
+    return null;
   }
 
   return matches.find((region) => region.level !== "city") || matches[0];
