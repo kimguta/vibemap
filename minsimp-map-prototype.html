@@ -2152,6 +2152,12 @@
       });
     }
 
+    function openProvinceFromNational(name) {
+      hideRegionPopover();
+      renderRegion(name);
+      scheduleMapStatsRefresh(name);
+    }
+
     function renderNational() {
       map.dataset.view = "national";
       title.textContent = "오늘 점심은 짜장 vs 짬뽕?";
@@ -2161,7 +2167,7 @@
         "cols-dynamic",
         7,
         (name) => statForName(name, (provinceStats[name] || {}).party),
-        (name, stat) => showRegionPopover(name, stat)
+        (name) => openProvinceFromNational(name)
       );
       markSelected("");
       updateAggregateSubtitle("전국", nationalLayout);
