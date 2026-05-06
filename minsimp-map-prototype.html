@@ -1342,7 +1342,7 @@
       "", "", "연천군", "", "포천시", "", "", "", "",
       "", "파주시", "양주시", "동두천시", "", "가평군", "", "", "",
       "김포시", "고양시", "", "의정부시", "남양주시", "", "양평군", "", "",
-      "", "부천시", "광명시", "서울", "구리시", "하남시", "", "", "",
+      "", "부천시", "광명시", "", "구리시", "하남시", "", "", "",
       "", "시흥시", "안양시", "과천시", "성남시", "광주시", "", "", "",
       "", "안산시", "군포시", "의왕시", "수원시", "용인시", "이천시", "여주시", "",
       "", "", "화성시", "오산시", "", "", "안성시", "", "",
@@ -1497,7 +1497,7 @@
       });
     }
 
-    rememberParent("경기", gyeonggiLayout.filter((name) => name !== "서울"));
+    rememberParent("경기", gyeonggiLayout);
     rememberParent("서울", seoulLayout);
     Object.entries(genericLayouts).forEach(([parentName, names]) => rememberParent(parentName, names));
     Object.entries(customRegionLayouts).forEach(([parentName, layout]) => rememberParent(parentName, layout.items));
@@ -2457,14 +2457,11 @@
         gyeonggiLayout,
         "cols-9",
         9,
-        (name) => {
-          if (name === "서울") return statForName("서울");
-          return statForName(name, (regions[name] || {}).party);
-        },
+        (name) => statForName(name, (regions[name] || {}).party),
         (name, stat) => showRegionPopover(name, stat)
       );
       markSelected("");
-      updateAggregateSubtitle("경기", gyeonggiLayout.filter((name) => name && name !== "서울"));
+      updateAggregateSubtitle("경기", gyeonggiLayout.filter(Boolean));
     }
 
     function renderSeoul() {
