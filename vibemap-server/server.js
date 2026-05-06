@@ -14,9 +14,11 @@ const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, "");
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 let memoryDb = null;
 const rateLimits = new Map();
+const visitorSessions = new Map();
 const choiceCooldownMs = 0;
 const reactionCooldownMs = 30000;
 const reactionResponseLimit = 18;
+const activeVisitorWindowMs = 5 * 60 * 1000;
 
 function hasSupabase() {
   return Boolean(supabaseUrl && supabaseKey);
@@ -102,6 +104,38 @@ function checkRateLimit(key, cooldownMs) {
   }
   rateLimits.set(key, now);
   return { allowed: true, retryAfterMs: 0, retryAfterSeconds: 0 };
+}
+
+function todayKeyKst(date = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(date);
+}
+
+function visitorSnapshot() {
+  const now = Date.now();
+  const today = todayKeyKst();
+  let activeNow = 0;
+  let todayTotal = 0;
+
+  for (const [participantId, session] of visitorSessions.entries()) {
+    if (now - session.lastSeenAt > 24 * 60 * 60 * 1000) {
+      visitorSessions.delete(participantId);
+      continue;
+    }
+    if (now - session.lastSeenAt <= activeVisitorWindowMs) activeNow += 1;
+    if (session.todayKey === today) todayTotal += 1;
+  }
+
+  return {
+    activeNow,
+    todayTotal,
+    activeWindowSeconds: Math.round(activeVisitorWindowMs / 1000),
+    updatedAt: new Date().toISOString()
+  };
 }
 
 async function readBody(req) {
@@ -523,6 +557,21 @@ async function handleApi(req, res, url) {
       storage: hasSupabase() ? "supabase" : "local-json",
       time: new Date().toISOString()
     });
+  }
+
+  if (url.pathname === "/api/visitors" && req.method === "GET") {
+    return ok(res, visitorSnapshot());
+  }
+
+  if (url.pathname === "/api/visitors" && req.method === "POST") {
+    const body = await readBody(req);
+    const participantId = String(body.participantId || makeParticipantId(req)).slice(0, 120);
+    visitorSessions.set(participantId, {
+      firstSeenAt: visitorSessions.get(participantId)?.firstSeenAt || Date.now(),
+      lastSeenAt: Date.now(),
+      todayKey: todayKeyKst()
+    });
+    return ok(res, visitorSnapshot());
   }
 
   if (url.pathname === "/api/questions" && req.method === "GET") {

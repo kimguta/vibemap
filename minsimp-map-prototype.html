@@ -357,6 +357,25 @@
       line-height: 1.45;
     }
 
+    .visitor-card {
+      display: grid;
+      gap: 8px;
+    }
+
+    .visitor-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .visitor-row strong {
+      color: var(--ink);
+      font-size: 16px;
+    }
+
     .banner-card {
       min-height: 132px;
       padding: 18px;
@@ -1022,6 +1041,12 @@
         <section class="section">
           <div class="notice">표시되는 값은 서비스 안에서 선택된 결과 기준입니다.</div>
         </section>
+
+        <section class="section visitor-card" aria-label="접속 현황">
+          <h3>접속 현황</h3>
+          <div class="visitor-row"><span>현재 접속자</span><strong id="active-visitor-total">집계 중</strong></div>
+          <div class="visitor-row"><span>오늘 접속자</span><strong id="today-visitor-total">집계 중</strong></div>
+        </section>
       </aside>
 
       <section class="panel map-panel">
@@ -1246,6 +1271,8 @@
     const localSummaryTotal = document.querySelector("#local-summary-total");
     const closeRegionTotal = document.querySelector("#close-region-total");
     const lowVolumeTotal = document.querySelector("#low-volume-total");
+    const activeVisitorTotal = document.querySelector("#active-visitor-total");
+    const todayVisitorTotal = document.querySelector("#today-visitor-total");
     const supportButtons = Array.from(document.querySelectorAll(".support"));
     const reactionForm = document.querySelector("#reaction-form");
     const reactionInput = document.querySelector("#reaction-input");
@@ -1288,6 +1315,7 @@
     const remoteStatsByName = new Map();
     let remoteMapRefreshTimer = null;
     let liveRefreshTimer = null;
+    let visitorRefreshTimer = null;
 
     function apiUrl(path) {
       return `${apiBaseUrl}${path}`;
@@ -1442,6 +1470,32 @@
         setCookie(participantStorageKey, participantId);
       }
       return participantId;
+    }
+
+    async function sendVisitorHeartbeat() {
+      try {
+        const response = await fetch(apiUrl("/api/visitors"), {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ participantId: getParticipantId() }),
+          cache: "no-store"
+        });
+        const payload = await response.json();
+        if (!payload.ok || !payload.data) return false;
+        activeVisitorTotal.textContent = Number(payload.data.activeNow || 0).toLocaleString();
+        todayVisitorTotal.textContent = Number(payload.data.todayTotal || 0).toLocaleString();
+        return true;
+      } catch {
+        activeVisitorTotal.textContent = "집계 전";
+        todayVisitorTotal.textContent = "집계 전";
+        return false;
+      }
+    }
+
+    function startVisitorHeartbeat() {
+      sendVisitorHeartbeat();
+      window.clearInterval(visitorRefreshTimer);
+      visitorRefreshTimer = window.setInterval(sendVisitorHeartbeat, 30000);
     }
 
     function storedChoiceLabel() {
@@ -2321,6 +2375,7 @@
       document.body.classList.remove("is-loading");
       fetchReactionsFromApi();
       startLiveRefresh();
+      startVisitorHeartbeat();
     }
 
     initializePage();
