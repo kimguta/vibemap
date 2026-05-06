@@ -1308,6 +1308,7 @@
     let activeScopeName = "전국";
     let activeChoiceId = null;
     let remoteReactions = null;
+    let renderedReactionSignature = "";
     let reactionCooldownTimer = null;
     let selectedRegionName = window.localStorage.getItem(viewedRegionStorageKey) || "전국";
     let selectedRegionStat = null;
@@ -1565,13 +1566,22 @@
       window.localStorage.setItem(reactionStorageKey, JSON.stringify(reactions.slice(0, 20)));
     }
 
+    function reactionSignature(reactions) {
+      return reactions
+        .map((reaction) => `${reaction.createdAt || ""}|${reaction.region || ""}|${reaction.text || ""}`)
+        .join("~");
+    }
+
     async function fetchReactionsFromApi() {
       try {
         const response = await fetch(apiUrl(`/api/reactions?limit=${reactionRenderLimit}`), { cache: "no-store" });
         const payload = await response.json();
         if (payload.ok && Array.isArray(payload.data)) {
-          remoteReactions = payload.data;
-          renderReactions();
+          const nextSignature = reactionSignature(payload.data);
+          if (nextSignature !== reactionSignature(remoteReactions || [])) {
+            remoteReactions = payload.data;
+            renderReactions();
+          }
         }
       } catch {
         // 정적 미리보기나 DB 미설정 환경에서는 브라우저 저장 반응을 그대로 쓴다.
@@ -1597,8 +1607,11 @@
     }
 
     function renderReactions() {
-      reactionList.innerHTML = "";
       const reactions = loadReactions().slice(0, reactionRenderLimit).reverse();
+      const nextSignature = reactionSignature(reactions);
+      if (nextSignature === renderedReactionSignature) return;
+      renderedReactionSignature = nextSignature;
+      reactionList.innerHTML = "";
       if (!reactions.length) {
         const empty = document.createElement("div");
         empty.className = "reaction-item";
