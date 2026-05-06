@@ -1402,6 +1402,7 @@
     const participantStorageKey = "vibemap-participant-id";
     const reactionStorageKey = "picked-short-reactions";
     const viewedRegionStorageKey = "picked-viewed-region";
+    const viewedRegionParentStorageKey = "picked-viewed-region-parent";
     const activeQuestionId = "lunch-jjajang-jjamppong";
     const apiBaseUrl = window.location.hostname.endsWith("github.io")
       ? "https://vibemap-z2vx.onrender.com"
@@ -1421,7 +1422,7 @@
     let pendingRegionName = null;
     let pendingParentRegion = null;
     let pendingRegionStat = null;
-    let selectedRegionParent = null;
+    let selectedRegionParent = window.localStorage.getItem(viewedRegionParentStorageKey) || null;
     let activeMapParentRegion = "전국";
     let myRegion = loadMyRegion();
     let userVoteRecord = loadUserVoteRecord();
@@ -2199,6 +2200,7 @@
       subtitle.textContent = stat.party === "gray"
         ? `${regionName} · ${stat.label} · ${countSummary(stat, name)} · 최근 7일 참여 ${total.toLocaleString()}명`
         : `${regionName} · ${stat.label} · 선택 차이 ${stat.diff.toFixed(1)}%p · ${countSummary(stat, name)} · 최근 7일 참여 ${total.toLocaleString()}명`;
+      window.localStorage.setItem(viewedRegionParentStorageKey, selectedRegionParent || "");
       updateSelectedSummary(name, stat);
       updateTodayBrief(name, stat);
     }
@@ -2484,10 +2486,10 @@
     }
 
     function renderSavedRegion() {
-      const savedRegion = selectedRegionName || "전국";
-      const parentRegion = myRegion?.regionName === savedRegion
+      const savedRegion = myRegion?.regionName || selectedRegionName || "전국";
+      const parentRegion = myRegion?.regionName
         ? myRegion.parentRegion
-        : regionParentMap[savedRegion];
+        : selectedRegionParent || regionParentMap[savedRegion];
       const initialRegion = parentRegion || savedRegion;
       renderRegion(provinceTabs.includes(initialRegion) ? initialRegion : "전국");
       if (parentRegion) {
@@ -2588,6 +2590,7 @@
           parentRegion: userVoteRecord.parentRegion || parentForRegion(userVoteRecord.regionName)
         });
       }
+      updateMyRegionDisplay();
       applyStoredSupportChoice();
       renderSavedRegion();
       const initialRegion = document.querySelector(".region-tabs .chip.active")?.dataset.region || "전국";

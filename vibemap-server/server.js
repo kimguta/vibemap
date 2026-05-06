@@ -960,7 +960,12 @@ async function serveStatic(req, res, url) {
   try {
     const fileStat = await stat(candidate);
     if (!fileStat.isFile()) throw new Error("not file");
-    res.writeHead(200, { "content-type": contentTypes[extname(candidate)] || "application/octet-stream" });
+    const extension = extname(candidate);
+    const headers = { "content-type": contentTypes[extension] || "application/octet-stream" };
+    if (extension === ".html") {
+      headers["cache-control"] = "no-store";
+    }
+    res.writeHead(200, headers);
     createReadStream(candidate).pipe(res);
   } catch {
     res.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
