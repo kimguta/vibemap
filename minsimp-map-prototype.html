@@ -164,7 +164,7 @@
     .chip {
       height: 32px;
       padding: 0 13px;
-      border: 1px solid var(--line);
+      border: 2px solid rgba(92, 242, 255, 0.34);
       border-radius: 999px;
       background: rgba(10, 17, 32, 0.72);
       color: var(--ink);
@@ -178,7 +178,7 @@
     .chip:hover,
     .chip.active {
       background: rgba(92, 242, 255, 0.12);
-      border-color: var(--accent-line);
+      border-color: rgba(92, 242, 255, 0.72);
       transform: translateY(-1px);
     }
 
@@ -563,6 +563,13 @@
       grid-template-rows: auto auto auto 1fr;
       min-height: 0;
       overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(92, 242, 255, 0.11), transparent 36%),
+        linear-gradient(90deg, rgba(92, 242, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(92, 242, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(20, 34, 61, 0.78) 0%, rgba(8, 14, 27, 0.94) 46%),
+        var(--panel);
+      background-size: auto, 18px 18px, 18px 18px, auto, auto;
     }
 
     .active-region-badge {
@@ -652,7 +659,7 @@
     .region-tabs {
       display: flex;
       gap: 8px;
-      padding: 0 20px 12px;
+      padding: 2px 20px 12px;
       overflow-x: auto;
       scrollbar-width: none;
     }
@@ -732,14 +739,9 @@
     #map {
       width: min(100%, 900px);
       padding: 16px 10px 12px;
-      border: 1px solid rgba(92, 242, 255, 0.16);
+      border: 1px solid rgba(92, 242, 255, 0.12);
       border-radius: 12px;
-      background:
-        radial-gradient(circle at 50% 0%, rgba(92, 242, 255, 0.1), transparent 36%),
-        linear-gradient(90deg, rgba(92, 242, 255, 0.065) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(92, 242, 255, 0.065) 1px, transparent 1px),
-        rgba(4, 9, 18, 0.26);
-      background-size: auto, 18px 18px, 18px 18px, auto;
+      background: rgba(4, 9, 18, 0.12);
       overflow: hidden;
     }
 
