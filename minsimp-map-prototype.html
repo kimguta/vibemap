@@ -1494,6 +1494,45 @@
       };
     }
 
+    function normalizeRegionRecord(record) {
+      if (!record?.regionName) return null;
+      const parentRegion = record.parentRegion || parentForRegion(record.regionName);
+      return {
+        regionId: regionKey(record.regionName, parentRegion),
+        regionName: record.regionName,
+        parentRegion
+      };
+    }
+
+    function readJsonStorage(key) {
+      const raw = window.localStorage.getItem(key) || getCookie(key);
+      if (!raw) return null;
+      try {
+        return JSON.parse(raw);
+      } catch {
+        return null;
+      }
+    }
+
+    function persistMyRegion(regionRecord) {
+      if (!regionRecord) {
+        window.localStorage.removeItem(myRegionStorageKey);
+        window.localStorage.removeItem(`${myRegionStorageKey}-backup`);
+        window.localStorage.removeItem(`${myRegionStorageKey}-name`);
+        window.localStorage.removeItem(`${myRegionStorageKey}-parent`);
+        setCookie(myRegionStorageKey, "");
+        return;
+      }
+
+      const normalized = normalizeRegionRecord(regionRecord);
+      const serialized = JSON.stringify(normalized);
+      window.localStorage.setItem(myRegionStorageKey, serialized);
+      window.localStorage.setItem(`${myRegionStorageKey}-backup`, serialized);
+      window.localStorage.setItem(`${myRegionStorageKey}-name`, normalized.regionName);
+      window.localStorage.setItem(`${myRegionStorageKey}-parent`, normalized.parentRegion || "");
+      setCookie(myRegionStorageKey, serialized);
+    }
+
     function loadUserVoteRecord() {
       try {
         const saved = JSON.parse(window.localStorage.getItem(userVoteRecordStorageKey) || "null");
@@ -1512,32 +1551,23 @@
     }
 
     function loadMyRegion() {
-      const rawRegion = window.localStorage.getItem(myRegionStorageKey) || getCookie(myRegionStorageKey);
-      try {
-        const saved = JSON.parse(rawRegion || "null");
-        if (saved && saved.regionName) {
-          const parentRegion = saved.parentRegion || parentForRegion(saved.regionName);
-          return {
-            ...saved,
-            parentRegion,
-            regionId: regionKey(saved.regionName, parentRegion)
-          };
-        }
-      } catch {
-        // 손상된 저장값은 없는 값처럼 다룬다.
+      const saved = normalizeRegionRecord(readJsonStorage(myRegionStorageKey))
+        || normalizeRegionRecord(readJsonStorage(`${myRegionStorageKey}-backup`));
+      if (saved) return saved;
+
+      const regionName = window.localStorage.getItem(`${myRegionStorageKey}-name`);
+      if (regionName) {
+        return normalizeRegionRecord({
+          regionName,
+          parentRegion: window.localStorage.getItem(`${myRegionStorageKey}-parent`) || null
+        });
       }
       return null;
     }
 
     function saveMyRegion(regionRecord) {
-      myRegion = regionRecord;
-      if (regionRecord) {
-        window.localStorage.setItem(myRegionStorageKey, JSON.stringify(regionRecord));
-        setCookie(myRegionStorageKey, JSON.stringify(regionRecord));
-      } else {
-        window.localStorage.removeItem(myRegionStorageKey);
-        setCookie(myRegionStorageKey, "");
-      }
+      myRegion = normalizeRegionRecord(regionRecord);
+      persistMyRegion(myRegion);
       updateMyRegionDisplay();
       markMyRegion();
     }
