@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://vibemap-z2vx.onrender.com/sitemap.xml
