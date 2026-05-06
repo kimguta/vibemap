@@ -1989,7 +1989,10 @@
           return true;
         }
       } catch {
-        // 정적 미리보기에서는 API가 없을 수 있으므로 로컬 저장만 유지한다.
+        shareStatus.textContent = "서버 반영에 실패했습니다";
+        window.setTimeout(() => {
+          shareStatus.textContent = "";
+        }, 2200);
       }
       return false;
     }
@@ -2213,7 +2216,13 @@
         nextParentRegion: nextRegion.parentRegion
       });
       if (nextChoice && result.changed) {
-        await syncChoiceToApi(nextChoice, nextRegion);
+        const synced = await syncChoiceToApi(nextChoice, nextRegion);
+        if (!synced) {
+          shareStatus.textContent = "지역 변경은 됐지만 투표 반영에 실패했습니다";
+          window.setTimeout(() => {
+            shareStatus.textContent = "";
+          }, 2200);
+        }
       } else {
         shareStatus.textContent = "내 지역으로 선택됨";
         window.setTimeout(() => {
@@ -2223,6 +2232,7 @@
       hideRegionPopover();
       updateLocalSummary();
       renderReactions();
+      refreshActiveView();
     }
 
     function setActiveTab(name) {
