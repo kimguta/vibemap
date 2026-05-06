@@ -147,8 +147,23 @@ async function readBody(req) {
   return JSON.parse(Buffer.concat(chunks).toString("utf8"));
 }
 
-function regionByName(db, name) {
-  return db.regions.find((region) => region.name === name || region.id === name);
+function regionByName(db, name, parentName = null) {
+  if (!name) return null;
+  const direct = db.regions.find((region) => region.id === name);
+  if (direct) return direct;
+
+  const matches = db.regions.filter((region) => region.name === name);
+  if (!matches.length) return null;
+
+  if (parentName) {
+    const parent = db.regions.find((region) => region.name === parentName || region.id === parentName);
+    if (parent) {
+      const scoped = matches.find((region) => region.parentId === parent.id);
+      if (scoped) return scoped;
+    }
+  }
+
+  return matches.find((region) => region.level !== "city") || matches[0];
 }
 
 function normalizeSupabaseRegion(row) {
@@ -181,14 +196,14 @@ async function dbWithSupabaseRegions(db) {
 }
 
 async function ensureSupabaseRegion(db, name, parentName) {
-  const existing = regionByName(db, name);
+  const existing = regionByName(db, name, parentName);
   if (existing) return existing;
-
-  const rows = await supabaseRequest(`/regions?name=eq.${encodeURIComponent(name)}&select=id,name,level,parent_id,sort_order&limit=1`);
-  if (rows?.[0]) return normalizeSupabaseRegion(rows[0]);
 
   const parent = regionByName(db, parentName);
   if (!parent) return null;
+
+  const rows = await supabaseRequest(`/regions?name=eq.${encodeURIComponent(name)}&parent_id=eq.${encodeURIComponent(parent.id)}&select=id,name,level,parent_id,sort_order&limit=1`);
+  if (rows?.[0]) return normalizeSupabaseRegion(rows[0]);
 
   const region = {
     id: dynamicRegionId(name, parent.id),
@@ -215,7 +230,7 @@ async function ensureSupabaseRegion(db, name, parentName) {
 }
 
 function ensureLocalRegion(db, name, parentName) {
-  const existing = regionByName(db, name);
+  const existing = regionByName(db, name, parentName);
   if (existing) return existing;
   const parent = regionByName(db, parentName);
   if (!parent) return null;
@@ -600,7 +615,8 @@ async function handleApi(req, res, url) {
     const questionId = url.searchParams.get("questionId") || getQuestion(db)?.id;
     const participantId = url.searchParams.get("participantId") || makeParticipantId(req);
     const regionName = url.searchParams.get("region") || "수원시";
-    const region = regionByName(db, regionName);
+    const parentRegionName = url.searchParams.get("parentRegion") || url.searchParams.get("parentRegionName") || null;
+    const region = regionByName(db, regionName, parentRegionName);
     if (!region) return fail(res, 400, "INVALID_REGION", "유효하지 않은 지역입니다.");
     const choice = db.choices.find((item) => (
       item.questionId === questionId &&
@@ -695,7 +711,7 @@ async function handleApi(req, res, url) {
     const regionName = body.region || body.regionName || "수원시";
     const parentRegionName = body.parentRegion || body.parentRegionName || "경기";
     let requestDb = hasSupabase() ? await dbWithSupabaseRegions(db) : db;
-    let region = regionByName(requestDb, regionName);
+    let region = regionByName(requestDb, regionName, parentRegionName);
     if (!region && hasSupabase()) {
       region = await ensureSupabaseRegion(requestDb, regionName, parentRegionName);
       if (region) requestDb = mergeRegions(requestDb, [region]);

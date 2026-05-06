@@ -1419,7 +1419,10 @@
     let selectedRegionName = window.localStorage.getItem(viewedRegionStorageKey) || "전국";
     let selectedRegionStat = null;
     let pendingRegionName = null;
+    let pendingParentRegion = null;
     let pendingRegionStat = null;
+    let selectedRegionParent = null;
+    let activeMapParentRegion = "전국";
     let myRegion = loadMyRegion();
     let userVoteRecord = loadUserVoteRecord();
     const remoteStatsByName = new Map();
@@ -1448,10 +1451,10 @@
     Object.entries(genericLayouts).forEach(([parentName, names]) => rememberParent(parentName, names));
     Object.entries(customRegionLayouts).forEach(([parentName, layout]) => rememberParent(parentName, layout.items));
 
-    function displayRegionName(name) {
+    function displayRegionName(name, parentName = null) {
       if (!name || name === "전국") return "전국";
-      const parentName = regionParentMap[name];
-      return parentName && parentName !== name ? `${parentName} ${name}` : name;
+      const resolvedParent = parentName || regionParentMap[name];
+      return resolvedParent && resolvedParent !== name ? `${resolvedParent} ${name}` : name;
     }
 
     function choiceToneLabel(party) {
@@ -1461,7 +1464,7 @@
       return "아직 선택이 많지 않습니다";
     }
 
-    function regionKey(name) {
+    function plainRegionKey(name) {
       return String(name || "")
         .trim()
         .toLowerCase()
@@ -1469,24 +1472,39 @@
         .replace(/[^\w가-힣-]/g, "");
     }
 
-    function parentForRegion(name) {
+    function regionKey(name, parentName = null) {
+      const regionPart = plainRegionKey(name);
+      const parentPart = parentName && parentName !== name ? plainRegionKey(parentName) : "";
+      return parentPart ? `${parentPart}-${regionPart}` : regionPart;
+    }
+
+    function parentForRegion(name, parentHint = null) {
       if (!name || name === "전국") return null;
+      if (parentHint && parentHint !== "전국" && parentHint !== name) return parentHint;
       return regionParentMap[name] || (provinceTabs.includes(name) ? name : null);
     }
 
-    function makeRegionRecord(name) {
+    function makeRegionRecord(name, parentHint = pendingParentRegion) {
       if (!name || name === "전국") return null;
+      const parentRegion = parentForRegion(name, parentHint);
       return {
-        regionId: regionKey(name),
+        regionId: regionKey(name, parentRegion),
         regionName: name,
-        parentRegion: parentForRegion(name)
+        parentRegion
       };
     }
 
     function loadUserVoteRecord() {
       try {
         const saved = JSON.parse(window.localStorage.getItem(userVoteRecordStorageKey) || "null");
-        if (saved && saved.regionName) return saved;
+        if (saved && saved.regionName) {
+          const parentRegion = saved.parentRegion || parentForRegion(saved.regionName);
+          return {
+            ...saved,
+            parentRegion,
+            regionId: regionKey(saved.regionName, parentRegion)
+          };
+        }
       } catch {
         // 손상된 저장값은 없는 값처럼 다룬다.
       }
@@ -1496,7 +1514,14 @@
     function loadMyRegion() {
       try {
         const saved = JSON.parse(window.localStorage.getItem(myRegionStorageKey) || "null");
-        if (saved && saved.regionName) return saved;
+        if (saved && saved.regionName) {
+          const parentRegion = saved.parentRegion || parentForRegion(saved.regionName);
+          return {
+            ...saved,
+            parentRegion,
+            regionId: regionKey(saved.regionName, parentRegion)
+          };
+        }
       } catch {
         // 손상된 저장값은 없는 값처럼 다룬다.
       }
@@ -1529,14 +1554,14 @@
         currentLocationNote.textContent = "지도에서 지역을 클릭한 뒤 내 지역으로 선택해 주세요.";
         return;
       }
-      currentLocationLabel.textContent = `내 지역 : ${displayRegionName(myRegion.regionName)}`;
+      currentLocationLabel.textContent = `내 지역 : ${displayRegionName(myRegion.regionName, myRegion.parentRegion)}`;
       currentLocationNote.textContent = "이 지역 기준으로 투표와 응원이 반영됩니다. 다른 지역으로 바꾸려면 지도를 클릭해 선택해 주세요.";
     }
 
     function updateLocalSummary() {
       updateMyRegionDisplay();
       nationalSummaryTotal.textContent = "0";
-      localSummaryLabel.textContent = selectedRegionName === "전국" ? "현재 화면 흐름" : `${displayRegionName(selectedRegionName)} 흐름`;
+      localSummaryLabel.textContent = selectedRegionName === "전국" ? "현재 화면 흐름" : `${displayRegionName(selectedRegionName, selectedRegionParent)} 흐름`;
       localSummaryTotal.textContent = selectedRegionStat?.label || "집계 전";
     }
 
@@ -1713,6 +1738,10 @@
       return displayRegionName(region);
     }
 
+    function scopedStatKey(name, parentName = activeMapParentRegion) {
+      return `${parentName || "전국"}::${name}`;
+    }
+
     function renderReactions() {
       const reactions = loadReactions().slice(0, reactionRenderLimit).reverse();
       const nextSignature = reactionSignature(reactions);
@@ -1763,7 +1792,7 @@
           body: JSON.stringify({
             questionId: activeQuestionId,
             participantId: getParticipantId(),
-            region: displayRegionName(myRegion.regionName),
+            region: displayRegionName(myRegion.regionName, myRegion.parentRegion),
             choice: currentChoiceLabel(),
             text: cleanText
           })
@@ -1785,7 +1814,7 @@
       const reactions = loadReactions().filter((reaction) => reaction.createdAt !== "샘플");
       reactions.unshift({
         text: cleanText,
-        region: displayRegionName(myRegion.regionName),
+        region: displayRegionName(myRegion.regionName, myRegion.parentRegion),
         choice: currentChoiceLabel(),
         createdAt: new Date().toISOString()
       });
@@ -1795,7 +1824,7 @@
     }
 
     function shareText() {
-      const regionName = displayRegionName(activeScopeName);
+      const regionName = displayRegionName(activeScopeName, selectedRegionParent);
       const stat = selectedRegionStat || statForName(activeScopeName);
       return `오늘 점심은 짜장 vs 짬뽕? 현재 ${regionName}은 ${choiceToneLabel(stat.party)}!\n${window.location.href}`;
     }
@@ -1946,7 +1975,7 @@
             saveUserVoteRecord(updatedRecord);
           } else if (!choiceId) {
             saveUserVoteRecord({
-              regionId: regionRecord.regionId || regionKey(regionRecord.regionName),
+              regionId: regionRecord.regionId || regionKey(regionRecord.regionName, regionRecord.parentRegion),
               regionName: regionRecord.regionName,
               parentRegion: regionRecord.parentRegion,
               choice: null
@@ -1983,8 +2012,8 @@
         button.classList.toggle("selected", button.textContent.trim() === savedChoice);
       });
 
-      if (savedChoice === "짜장면") {
-        document.body.classList.add("support-blue");
+        if (savedChoice === "짜장면") {
+          document.body.classList.add("support-blue");
       } else if (savedChoice === "짬뽕") {
         document.body.classList.add("support-red");
       } else {
@@ -1992,7 +2021,13 @@
       }
     }
 
-    function statForName(name, fallbackParty = "gray", index = 0) {
+    function setActiveMapParentRegion(name) {
+      activeMapParentRegion = name || "전국";
+    }
+
+    function statForName(name, fallbackParty = "gray", index = 0, parentName = activeMapParentRegion) {
+      const scopedKey = scopedStatKey(name, parentName);
+      if (remoteStatsByName.has(scopedKey)) return remoteStatsByName.get(scopedKey);
       if (remoteStatsByName.has(name)) return remoteStatsByName.get(name);
       return {
         party: "gray",
@@ -2031,7 +2066,7 @@
         const payload = await response.json();
         if (!payload.ok || !Array.isArray(payload.data?.items)) return false;
         payload.data.items.forEach((item) => {
-          remoteStatsByName.set(item.name, statFromApiItem(item));
+          remoteStatsByName.set(scopedStatKey(item.name, regionName), statFromApiItem(item));
         });
         return true;
       } catch {
@@ -2072,7 +2107,7 @@
     }
 
     function updateSelectedSummary(name, stat) {
-      localSummaryLabel.textContent = name === "전국" ? "선택 화면 흐름" : `${displayRegionName(name)} 흐름`;
+      localSummaryLabel.textContent = name === "전국" ? "선택 화면 흐름" : `${displayRegionName(name, selectedRegionParent)} 흐름`;
       localSummaryTotal.textContent = stat.label;
     }
 
@@ -2116,12 +2151,13 @@
       return;
     }
 
-    function updateSubtitle(name, stat) {
+    function updateSubtitle(name, stat, parentName = activeMapParentRegion) {
       activeScopeName = name;
       selectedRegionName = name;
+      selectedRegionParent = parentForRegion(name, parentName);
       selectedRegionStat = stat;
       window.localStorage.setItem(viewedRegionStorageKey, name);
-      const regionName = displayRegionName(name);
+      const regionName = displayRegionName(name, selectedRegionParent);
       activeRegionLabel.textContent = regionName;
       const total = stat.total;
       subtitle.textContent = stat.party === "gray"
@@ -2148,12 +2184,13 @@
 
     function showRegionPopover(name, stat) {
       pendingRegionName = name;
+      pendingParentRegion = parentForRegion(name, activeMapParentRegion);
       pendingRegionStat = stat;
-      markSelected(name);
-      updateSubtitle(name, stat);
-      popoverRegionName.textContent = `${displayRegionName(name)} 결과`;
+      markSelected(name, pendingParentRegion);
+      updateSubtitle(name, stat, pendingParentRegion);
+      popoverRegionName.textContent = `${displayRegionName(name, pendingParentRegion)} 결과`;
       popoverResult.textContent = resultTextForPopover(name, stat);
-      setMyRegionButton.textContent = myRegion?.regionName === name ? "내 지역으로 선택됨" : "내 지역으로 선택";
+      setMyRegionButton.textContent = myRegion?.regionName === name && myRegion?.parentRegion === pendingParentRegion ? "내 지역으로 선택됨" : "내 지역으로 선택";
       regionPopover.hidden = false;
     }
 
@@ -2163,7 +2200,7 @@
 
     async function selectPendingRegionAsMine() {
       if (!pendingRegionName) return;
-      const nextRegion = makeRegionRecord(pendingRegionName);
+      const nextRegion = makeRegionRecord(pendingRegionName, pendingParentRegion);
       const previous = userVoteRecord || {};
       const nextChoice = previous.choice || activeChoiceId || null;
       saveMyRegion(nextRegion);
@@ -2194,17 +2231,19 @@
       });
     }
 
-    function markSelected(name) {
+    function markSelected(name, parentName = selectedRegionParent) {
       document.querySelectorAll(".tile[data-map-name]").forEach((tile) => {
-        tile.classList.toggle("selected", tile.dataset.mapName === name);
+        const tileParent = parentForRegion(tile.dataset.mapName, activeMapParentRegion);
+        tile.classList.toggle("selected", tile.dataset.mapName === name && (!parentName || !tileParent || tileParent === parentName));
       });
     }
 
     function isMyRegionTile(name) {
       if (!myRegion?.regionName || !name) return false;
-      if (name === myRegion.regionName) return true;
-      const parentRegion = myRegion.parentRegion || parentForRegion(myRegion.regionName);
-      return Boolean(parentRegion && name === parentRegion);
+      const myParentRegion = myRegion.parentRegion || parentForRegion(myRegion.regionName);
+      if (name === myParentRegion && activeMapParentRegion === "전국") return true;
+      const tileParent = parentForRegion(name, activeMapParentRegion);
+      return name === myRegion.regionName && (!myParentRegion || !tileParent || tileParent === myParentRegion);
     }
 
     function markMyRegion() {
@@ -2280,6 +2319,7 @@
     }
 
     function renderNational() {
+      setActiveMapParentRegion("전국");
       map.dataset.view = "national";
       title.textContent = "오늘 점심은 짜장 vs 짬뽕?";
       setActiveTab("전국");
@@ -2295,6 +2335,7 @@
     }
 
     function renderGyeonggi() {
+      setActiveMapParentRegion("경기");
       map.dataset.view = "gyeonggi";
       title.textContent = "오늘 점심은 짜장 vs 짬뽕?";
       setActiveTab("경기");
@@ -2313,6 +2354,7 @@
     }
 
     function renderSeoul() {
+      setActiveMapParentRegion("서울");
       map.dataset.view = "seoul";
       title.textContent = "오늘 점심은 짜장 vs 짬뽕?";
       setActiveTab("서울");
@@ -2328,6 +2370,7 @@
     }
 
     function renderGenericRegion(name) {
+      setActiveMapParentRegion(name);
       map.dataset.view = "generic";
       title.textContent = "오늘 점심은 짜장 vs 짬뽕?";
       setActiveTab(name);
@@ -2399,13 +2442,15 @@
 
     function renderSavedRegion() {
       const savedRegion = selectedRegionName || "전국";
-      const parentRegion = regionParentMap[savedRegion];
+      const parentRegion = myRegion?.regionName === savedRegion
+        ? myRegion.parentRegion
+        : regionParentMap[savedRegion];
       const initialRegion = parentRegion || savedRegion;
       renderRegion(provinceTabs.includes(initialRegion) ? initialRegion : "전국");
       if (parentRegion) {
-        const stat = statForName(savedRegion, (regions[savedRegion] || {}).party);
-        markSelected(savedRegion);
-        updateSubtitle(savedRegion, stat);
+        const stat = statForName(savedRegion, (regions[savedRegion] || {}).party, 0, parentRegion);
+        markSelected(savedRegion, parentRegion);
+        updateSubtitle(savedRegion, stat, parentRegion);
       }
     }
 
@@ -2456,13 +2501,13 @@
         const choice = button.textContent.trim();
         const nextChoice = choiceIdFromLabel(choice);
         const previous = userVoteRecord || {};
-        const isDeselect = previous.regionName === myRegion.regionName && previous.choice === nextChoice;
+        const isDeselect = previous.regionId === myRegion.regionId && previous.choice === nextChoice;
         const finalChoice = isDeselect ? null : nextChoice;
         const savedChoice = isDeselect ? "" : choice;
 
         const result = applyVoteMove({
           previousRegionId: previous.regionId || null,
-          nextRegionId: myRegion.regionId || regionKey(myRegion.regionName),
+          nextRegionId: myRegion.regionId || regionKey(myRegion.regionName, myRegion.parentRegion),
           previousChoice: previous.choice || null,
           nextChoice: finalChoice,
           nextRegionName: myRegion.regionName,
@@ -2495,7 +2540,7 @@
     async function initializePage() {
       if (!myRegion?.regionName && userVoteRecord?.regionName) {
         saveMyRegion({
-          regionId: userVoteRecord.regionId || regionKey(userVoteRecord.regionName),
+          regionId: userVoteRecord.regionId || regionKey(userVoteRecord.regionName, userVoteRecord.parentRegion),
           regionName: userVoteRecord.regionName,
           parentRegion: userVoteRecord.parentRegion || parentForRegion(userVoteRecord.regionName)
         });
