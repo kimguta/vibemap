@@ -3,30 +3,30 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>picked 핃 - 오늘 점심은 짜장 vs 짬뽕? 지역별 실시간 선택 지도</title>
-  <meta name="description" content="picked 핃은 오늘의 질문에 대한 지역별 선택 흐름을 실시간으로 보여주는 참여형 투표 지도입니다. 짜장면과 짬뽕 선택이 우리 동네에서 어떻게 갈리는지 확인해보세요." />
-  <meta name="keywords" content="picked, 핃, 짜장면, 짬뽕, 지역 투표, 실시간 투표, 선택 지도, 점심 메뉴, 지역별 반응" />
+  <title>짜장면 vs 짬뽕? 지역별 실시간 선택 지도</title>
+  <meta name="description" content="오늘의 질문에 대한 지역별 선택 흐름을 실시간으로 보여주는 참여형 투표 지도입니다. 짜장면과 짬뽕 선택이 우리 동네에서 어떻게 갈리는지 확인해보세요." />
+  <meta name="keywords" content="짜장면, 짬뽕, 지역 투표, 실시간 투표, 선택 지도, 점심 메뉴, 지역별 반응" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
   <link rel="canonical" href="https://vibemap-z2vx.onrender.com/minsimp-map-prototype.html" />
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="ko_KR" />
-  <meta property="og:site_name" content="picked 핃" />
-  <meta property="og:title" content="picked 핃 - 오늘 점심은 짜장 vs 짬뽕?" />
+  <meta property="og:site_name" content="OBSERVED SIGNAL" />
+  <meta property="og:title" content="짜장면 vs 짬뽕?" />
   <meta property="og:description" content="우리 동네는 짜장면일까, 짬뽕일까? 지역별 선택 흐름을 실시간으로 확인하고 참여해보세요." />
   <meta property="og:url" content="https://vibemap-z2vx.onrender.com/minsimp-map-prototype.html" />
   <meta property="og:image" content="https://vibemap-z2vx.onrender.com/assets/picked-og.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="picked 핃 - 오늘 점심은 짜장 vs 짬뽕?" />
+  <meta name="twitter:title" content="짜장면 vs 짬뽕?" />
   <meta name="twitter:description" content="지역별 짜장면 vs 짬뽕 선택 흐름을 실시간으로 확인해보세요." />
   <meta name="twitter:image" content="https://vibemap-z2vx.onrender.com/assets/picked-og.png" />
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "WebApplication",
-      "name": "picked 핃",
-      "alternateName": "picked",
+      "name": "OBSERVED SIGNAL",
+      "alternateName": "regional choice map",
       "url": "https://vibemap-z2vx.onrender.com/minsimp-map-prototype.html",
       "applicationCategory": "LifestyleApplication",
       "operatingSystem": "Web",
@@ -41,20 +41,26 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #070b17;
       --panel: rgba(10, 17, 32, 0.88);
-      --line: rgba(92, 242, 255, 0.28);
+      --line: rgba(45, 212, 191, 0.28);
       --ink: #f7fbff;
       --muted: #8ea4bd;
       --blue: #0d0f13;
       --red: #f43f3f;
       --tie: #7b4b4d;
       --gray: #263244;
-      --accent: #5cf2ff;
-      --accent-line: rgba(92, 242, 255, 0.58);
+      --accent: #2dd4bf;
+      --accent-line: rgba(45, 212, 191, 0.46);
+      --hot: #67f5e4;
+      --hot-line: rgba(45, 212, 191, 0.18);
+      --acid: #2dd4bf;
+      --font-ui: "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+      --font-display: "Rajdhani", "Noto Sans KR", "Malgun Gothic", sans-serif;
+      --font-terminal: "Share Tech Mono", "Noto Sans KR", "Malgun Gothic", monospace;
       --surface: rgba(15, 25, 45, 0.92);
       --soft: rgba(16, 29, 54, 0.88);
       --tile-size: 80px;
@@ -69,13 +75,14 @@
       min-height: 100vh;
       color: var(--ink);
       background:
-        radial-gradient(circle at 50% -10%, rgba(92, 242, 255, 0.14), transparent 34%),
+        radial-gradient(circle at 50% -10%, rgba(45, 212, 191, 0.14), transparent 34%),
         radial-gradient(circle at 86% 16%, rgba(255, 45, 85, 0.12), transparent 28%),
-        linear-gradient(90deg, rgba(92, 242, 255, 0.045) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(92, 242, 255, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(45, 212, 191, 0.045) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(45, 212, 191, 0.045) 1px, transparent 1px),
         linear-gradient(180deg, #070b17 0%, #0b1020 52%, #050711 100%);
       background-size: auto, auto, 24px 24px, 24px 24px, auto;
-      font-family: "IBM Plex Sans KR", system-ui, sans-serif;
+      font-family: var(--font-ui);
+      font-feature-settings: "tnum" 1;
       transition: background 180ms ease;
     }
 
@@ -90,9 +97,9 @@
     body.support-blue {
       background:
         radial-gradient(circle at 50% -10%, rgba(210, 154, 72, 0.16), transparent 34%),
-        radial-gradient(circle at 86% 16%, rgba(92, 242, 255, 0.08), transparent 28%),
-        linear-gradient(90deg, rgba(92, 242, 255, 0.045) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(92, 242, 255, 0.045) 1px, transparent 1px),
+        radial-gradient(circle at 86% 16%, rgba(45, 212, 191, 0.08), transparent 28%),
+        linear-gradient(90deg, rgba(45, 212, 191, 0.045) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(45, 212, 191, 0.045) 1px, transparent 1px),
         linear-gradient(180deg, #080b16 0%, #121021 100%);
       background-size: auto, auto, 24px 24px, 24px 24px, auto;
     }
@@ -100,9 +107,9 @@
     body.support-red {
       background:
         radial-gradient(circle at 50% -10%, rgba(244, 63, 63, 0.18), transparent 34%),
-        radial-gradient(circle at 86% 16%, rgba(92, 242, 255, 0.09), transparent 28%),
-        linear-gradient(90deg, rgba(92, 242, 255, 0.045) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(92, 242, 255, 0.045) 1px, transparent 1px),
+        radial-gradient(circle at 86% 16%, rgba(45, 212, 191, 0.09), transparent 28%),
+        linear-gradient(90deg, rgba(45, 212, 191, 0.045) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(45, 212, 191, 0.045) 1px, transparent 1px),
         linear-gradient(180deg, #0b0815 0%, #151020 100%);
       background-size: auto, auto, 24px 24px, 24px 24px, auto;
     }
@@ -110,8 +117,8 @@
     body.support-gray {
       background:
         radial-gradient(circle at 50% -10%, rgba(142, 164, 189, 0.14), transparent 34%),
-        linear-gradient(90deg, rgba(92, 242, 255, 0.045) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(92, 242, 255, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(45, 212, 191, 0.045) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(45, 212, 191, 0.045) 1px, transparent 1px),
         linear-gradient(180deg, #070b17 0%, #0b1020 100%);
       background-size: auto, 24px 24px, 24px 24px, auto;
     }
@@ -143,10 +150,11 @@
 
     .brand h1 {
       margin: 0;
-      font-family: "Manrope", "IBM Plex Sans KR", sans-serif;
+      font-family: var(--font-display);
       font-size: 21px;
       line-height: 1;
-      letter-spacing: -0.03em;
+      letter-spacing: 0.08em;
+      text-shadow: -1px 0 rgba(45, 212, 191, 0.42), 1px 0 rgba(45, 212, 191, 0.24);
     }
 
     .brand span {
@@ -157,24 +165,38 @@
     .issue-card {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
     }
 
     .issue-kicker {
-      color: var(--accent);
+      color: var(--hot);
       font-size: 12px;
       font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      text-shadow: 0 0 10px rgba(92, 242, 255, 0.45);
+      text-shadow: 0 0 12px rgba(45, 212, 191, 0.52);
+    }
+
+    .issue-card::after {
+      content: "TODAY PICK";
+      width: fit-content;
+      margin-top: 4px;
+      padding: 2px 7px;
+      border: 1px solid rgba(215, 255, 56, 0.3);
+      color: rgba(215, 255, 56, 0.76);
+      background: rgba(215, 255, 56, 0.032);
+      font-family: var(--font-terminal);
+      font-size: 10px;
+      letter-spacing: 0.18em;
     }
 
     .issue-question {
       margin: 0;
-      font-family: "Manrope", "IBM Plex Sans KR", sans-serif;
-      font-size: 22px;
-      line-height: 1.15;
-      letter-spacing: -0.02em;
+      font-family: var(--font-ui);
+      font-size: 20px;
+      line-height: 1.2;
+      letter-spacing: 0;
+      word-break: keep-all;
     }
 
     .issue-options {
@@ -186,29 +208,31 @@
     .chip {
       height: 32px;
       padding: 0 13px;
-      border: 2px solid rgba(92, 242, 255, 0.34);
-      border-radius: 999px;
+      border: 1px solid rgba(45, 212, 191, 0.34);
+      border-radius: 0;
       background: rgba(10, 17, 32, 0.72);
       color: var(--ink);
       cursor: pointer;
       white-space: nowrap;
       transition: background 160ms ease, border-color 160ms ease, transform 160ms ease, color 160ms ease;
       font-size: 12px;
-      box-shadow: inset 0 0 12px rgba(92, 242, 255, 0.04);
+      font-family: var(--font-terminal);
+      letter-spacing: 0.02em;
+      box-shadow: inset 0 0 12px rgba(45, 212, 191, 0.04);
     }
 
     .chip:hover,
     .chip.active {
-      background: rgba(92, 242, 255, 0.12);
-      border-color: rgba(92, 242, 255, 0.72);
+      background: rgba(45, 212, 191, 0.12);
+      border-color: rgba(45, 212, 191, 0.72);
       transform: translateY(-1px);
     }
 
     .chip.active {
-      background: rgba(92, 242, 255, 0.18);
+      background: rgba(45, 212, 191, 0.18);
       color: #ffffff;
       border-color: var(--accent);
-      box-shadow: 0 0 16px rgba(92, 242, 255, 0.22);
+      box-shadow: 0 0 16px rgba(45, 212, 191, 0.22);
     }
 
     main {
@@ -238,6 +262,53 @@
       .panel {
         max-height: 100%;
       }
+
+      .right-rail {
+        height: calc(100vh - 28px);
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .reaction-card {
+        height: 100%;
+        min-height: 0;
+      }
+    }
+
+    @media (min-width: 981px) and (max-width: 1480px) {
+      .app {
+        height: auto;
+      }
+
+      main {
+        grid-template-columns: 1fr;
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+      }
+
+      .panel {
+        max-height: none;
+      }
+
+      aside.panel {
+        order: 1;
+      }
+
+      .map-panel {
+        order: 2;
+      }
+
+      .right-rail {
+        order: 3;
+        height: min(720px, 82vh);
+        min-height: 520px;
+        overflow: hidden;
+      }
+
+      .map-body {
+        min-height: 62vh;
+      }
     }
 
     .panel {
@@ -245,8 +316,8 @@
         linear-gradient(180deg, rgba(20, 34, 61, 0.78) 0%, rgba(8, 14, 27, 0.94) 46%),
         var(--panel);
       border: 1px solid var(--line);
-      border-radius: 10px;
-      box-shadow: 0 0 0 1px rgba(92, 242, 255, 0.05), 0 18px 40px rgba(0, 0, 0, 0.28);
+      border-radius: 0;
+      box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.05), 0 18px 40px rgba(0, 0, 0, 0.28);
       min-width: 0;
       transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
     }
@@ -281,8 +352,8 @@
     }
 
     .section {
-      padding: 13px 15px;
-      border-bottom: 1px solid rgba(92, 242, 255, 0.12);
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(45, 212, 191, 0.12);
     }
 
     .section:last-child {
@@ -290,9 +361,10 @@
     }
 
     h2, h3 {
-      margin: 0 0 9px;
-      font-family: "Manrope", "IBM Plex Sans KR", sans-serif;
-      letter-spacing: -0.02em;
+      margin: 0 0 8px;
+      font-family: var(--font-display);
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
     }
 
     h2 { font-size: 17px; }
@@ -300,22 +372,22 @@
 
     .muted {
       color: var(--muted);
-      font-size: 13px;
-      line-height: 1.5;
+      font-size: 12px;
+      line-height: 1.42;
     }
 
     .local-card {
-      padding: 12px;
-      border: 1px solid rgba(92, 242, 255, 0.18);
-      border-radius: 10px;
+      padding: 11px;
+      border: 1px solid rgba(45, 212, 191, 0.18);
+      border-radius: 0;
       background: rgba(4, 9, 18, 0.35);
-      box-shadow: inset 0 0 18px rgba(92, 242, 255, 0.04);
+      box-shadow: inset 0 0 18px rgba(45, 212, 191, 0.04);
     }
 
     .local-card strong {
       display: block;
-      margin-bottom: 4px;
-      font-size: 19px;
+      margin-bottom: 3px;
+      font-size: 17px;
     }
 
     .support-buttons {
@@ -332,12 +404,14 @@
     }
 
     .support {
-      height: 40px;
+      height: 37px;
       border: 1px solid rgba(255, 255, 255, 0.18);
-      border-radius: 10px;
+      border-radius: 0;
       color: #ffffff;
       font-weight: 500;
       cursor: pointer;
+      font-family: var(--font-terminal);
+      letter-spacing: 0.04em;
       box-shadow: inset 0 0 14px rgba(255, 255, 255, 0.06);
       transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease, opacity 160ms ease;
     }
@@ -353,7 +427,7 @@
     .support.selected {
       transform: scale(0.985);
       border-color: var(--accent);
-      box-shadow: inset 0 0 0 1px rgba(92, 242, 255, 0.38), 0 0 18px rgba(92, 242, 255, 0.32);
+      box-shadow: inset 0 0 0 1px rgba(45, 212, 191, 0.38), 0 0 18px rgba(45, 212, 191, 0.32);
       filter: brightness(1.08);
     }
 
@@ -363,23 +437,48 @@
       gap: 6px;
     }
 
+    .legend {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 5px 8px;
+    }
+
     .metric {
       display: flex;
       justify-content: space-between;
       gap: 10px;
-      font-size: 13px;
+      font-size: 12px;
+    }
+
+    .metric span {
+      color: var(--muted);
     }
 
     .metric strong {
-      font-size: 15px;
+      font-size: 13px;
+      font-family: var(--font-terminal);
+      letter-spacing: 0.03em;
+      color: var(--ink);
+      text-shadow: none;
+    }
+
+    #national-summary-total,
+    #close-region-total,
+    #low-volume-total {
+      color: var(--hot);
+      text-shadow: 0 0 10px rgba(45, 212, 191, 0.38);
+    }
+
+    .metric-unit {
+      color: var(--muted);
+      text-shadow: none;
     }
 
     .legend-row {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       color: var(--muted);
-      font-size: 13px;
+      font-size: 11px;
     }
 
     .dot {
@@ -398,15 +497,23 @@
     .dot.gray { background: var(--gray); }
 
     .notice {
+      display: none;
       color: var(--muted);
-      font-size: 11px;
-      line-height: 1.45;
+      font-size: 10px;
+      line-height: 1.35;
+    }
+
+    .notice-section {
+      display: none;
     }
 
     .visitor-card {
       display: grid;
       gap: 6px;
-      margin-top: auto;
+      margin-top: 8px;
+      padding-top: 11px;
+      padding-bottom: 11px;
+      background: rgba(2, 6, 14, 0.42);
     }
 
     .visitor-row {
@@ -414,20 +521,51 @@
       align-items: center;
       justify-content: space-between;
       gap: 10px;
+      padding: 3px 7px;
+      border: 1px solid rgba(45, 212, 191, 0.12);
+      border-left-color: rgba(45, 212, 191, 0.38);
+      background: rgba(2, 6, 14, 0.48);
       font-size: 12px;
       color: var(--muted);
     }
 
     .visitor-row strong {
+      color: var(--hot);
+      font-size: 12px;
+      font-family: var(--font-terminal);
+      letter-spacing: 0.04em;
+      text-shadow: 0 0 10px rgba(45, 212, 191, 0.34);
+    }
+
+    .contact-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+      padding: 4px 7px 2px;
+      border-top: 1px solid rgba(45, 212, 191, 0.12);
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .contact-line a {
+      overflow: hidden;
       color: var(--ink);
-      font-size: 14px;
+      text-decoration: none;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .contact-line a:hover {
+      color: var(--hot);
     }
 
     .banner-card {
       min-height: 132px;
       padding: 18px;
       border: 1px solid var(--line);
-      border-radius: 10px;
+      border-radius: 0;
       background:
         linear-gradient(180deg, rgba(20, 34, 61, 0.78) 0%, rgba(8, 14, 27, 0.94) 46%),
         var(--panel);
@@ -442,19 +580,19 @@
 
     .banner-eyebrow {
       margin-bottom: 8px;
-      color: var(--accent);
+      color: var(--hot);
       font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.08em;
-      text-shadow: 0 0 10px rgba(92, 242, 255, 0.42);
+      text-shadow: 0 0 12px rgba(45, 212, 191, 0.52);
     }
 
     .banner-title {
       margin: 0 0 8px;
-      font-family: "Manrope", "IBM Plex Sans KR", sans-serif;
+      font-family: var(--font-display);
       font-size: 17px;
       line-height: 1.25;
-      letter-spacing: -0.02em;
+      letter-spacing: 0.04em;
     }
 
     .banner-copy {
@@ -505,8 +643,8 @@
       width: 100%;
       height: 40px;
       padding: 0 56px 0 14px;
-      border: 1px solid rgba(92, 242, 255, 0.22);
-      border-radius: 10px;
+      border: 1px solid rgba(45, 212, 191, 0.22);
+      border-radius: 0;
       background: rgba(4, 9, 18, 0.56);
       color: var(--ink);
       font: inherit;
@@ -516,7 +654,7 @@
 
     .reaction-input:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(92, 242, 255, 0.1), 0 0 18px rgba(92, 242, 255, 0.16);
+      box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.1), 0 0 18px rgba(45, 212, 191, 0.16);
     }
 
     .reaction-count {
@@ -540,13 +678,15 @@
       padding: 0 12px;
       border: 0;
       border: 1px solid var(--accent-line);
-      border-radius: 10px;
-      background: rgba(92, 242, 255, 0.14);
+      border-radius: 0;
+      background: rgba(45, 212, 191, 0.14);
       color: #ffffff;
       cursor: pointer;
       font: inherit;
+      font-family: var(--font-terminal);
       font-size: 13px;
-      box-shadow: inset 0 0 16px rgba(92, 242, 255, 0.08), 0 0 14px rgba(92, 242, 255, 0.08);
+      letter-spacing: 0.04em;
+      box-shadow: inset 0 0 16px rgba(45, 212, 191, 0.08), 0 0 14px rgba(45, 212, 191, 0.08);
     }
 
     .reaction-submit:disabled {
@@ -566,8 +706,8 @@
 
     .reaction-item {
       padding: 10px 12px;
-      border: 1px solid rgba(92, 242, 255, 0.14);
-      border-radius: 10px;
+      border: 1px solid rgba(45, 212, 191, 0.14);
+      border-radius: 0;
       background: rgba(4, 9, 18, 0.42);
       animation: bubbleIn 180ms ease both;
     }
@@ -596,7 +736,7 @@
       flex: 0 0 auto;
       background: var(--gray);
       border: 1px solid rgba(255, 255, 255, 0.5);
-      box-shadow: 0 0 8px rgba(92, 242, 255, 0.14);
+      box-shadow: 0 0 8px rgba(45, 212, 191, 0.14);
     }
 
     .reaction-choice-dot.blue {
@@ -621,20 +761,40 @@
       grid-template-rows: auto auto auto 1fr;
       min-height: 0;
       overflow: hidden;
+      position: relative;
       background:
-        radial-gradient(circle at 50% 0%, rgba(92, 242, 255, 0.11), transparent 36%),
-        linear-gradient(90deg, rgba(92, 242, 255, 0.04) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(92, 242, 255, 0.04) 1px, transparent 1px),
+        radial-gradient(circle at 50% 0%, rgba(45, 212, 191, 0.11), transparent 36%),
+        linear-gradient(90deg, rgba(45, 212, 191, 0.04) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(45, 212, 191, 0.04) 1px, transparent 1px),
         linear-gradient(180deg, rgba(20, 34, 61, 0.78) 0%, rgba(8, 14, 27, 0.94) 46%),
         var(--panel);
       background-size: auto, 18px 18px, 18px 18px, auto, auto;
     }
 
+    .map-panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      background:
+        linear-gradient(90deg, transparent, rgba(45, 212, 191, 0.16), transparent),
+        repeating-linear-gradient(180deg, transparent 0 15px, rgba(215, 255, 56, 0.052) 16px, transparent 19px),
+        repeating-linear-gradient(90deg, rgba(45, 212, 191, 0.028) 0 1px, transparent 1px 19px);
+      mix-blend-mode: screen;
+      filter: blur(0.5px);
+      z-index: 2;
+    }
+
+    .map-panel.map-switching::after {
+      animation: mapScan 620ms steps(6, end) both;
+    }
+
     body.support-blue .map-panel {
       background:
         radial-gradient(circle at 50% 0%, rgba(210, 154, 72, 0.12), transparent 36%),
-        linear-gradient(90deg, rgba(92, 242, 255, 0.04) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(92, 242, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(45, 212, 191, 0.04) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(45, 212, 191, 0.04) 1px, transparent 1px),
         linear-gradient(180deg, rgba(43, 32, 22, 0.72) 0%, rgba(8, 14, 27, 0.94) 48%),
         var(--panel);
       background-size: auto, 18px 18px, 18px 18px, auto, auto;
@@ -643,8 +803,8 @@
     body.support-red .map-panel {
       background:
         radial-gradient(circle at 50% 0%, rgba(244, 63, 63, 0.14), transparent 36%),
-        linear-gradient(90deg, rgba(92, 242, 255, 0.04) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(92, 242, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(45, 212, 191, 0.04) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(45, 212, 191, 0.04) 1px, transparent 1px),
         linear-gradient(180deg, rgba(52, 18, 32, 0.72) 0%, rgba(8, 14, 27, 0.94) 48%),
         var(--panel);
       background-size: auto, 18px 18px, 18px 18px, auto, auto;
@@ -652,6 +812,8 @@
 
     .active-region-badge {
       display: inline-flex;
+      position: relative;
+      z-index: 3;
       align-items: center;
       gap: 8px;
       width: fit-content;
@@ -659,9 +821,9 @@
       min-height: 34px;
       margin: 0 20px 4px;
       padding: 0 12px;
-      border: 1px solid rgba(92, 242, 255, 0.22);
-      border-radius: 999px;
-      background: rgba(92, 242, 255, 0.08);
+      border: 1px solid rgba(45, 212, 191, 0.22);
+      border-radius: 0;
+      background: rgba(45, 212, 191, 0.08);
       color: var(--ink);
       backdrop-filter: blur(12px);
       font-size: 12px;
@@ -675,10 +837,16 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      color: var(--hot);
+      font-family: var(--font-terminal);
+      letter-spacing: 0.02em;
+      text-shadow: 0 0 10px rgba(45, 212, 191, 0.38);
     }
 
     .map-head {
       display: flex;
+      position: relative;
+      z-index: 3;
       align-items: flex-start;
       justify-content: space-between;
       gap: 14px;
@@ -696,17 +864,19 @@
       height: 34px;
       padding: 0 14px;
       border: 1px solid var(--accent-line);
-      border-radius: 999px;
-      background: rgba(92, 242, 255, 0.1);
+      border-radius: 0;
+      background: rgba(45, 212, 191, 0.1);
       color: var(--ink);
       cursor: pointer;
       font: inherit;
+      font-family: var(--font-terminal);
       font-size: 12px;
+      letter-spacing: 0.04em;
       transition: background 120ms ease, transform 120ms ease;
     }
 
     .share-button:hover {
-      background: rgba(92, 242, 255, 0.2);
+      background: rgba(45, 212, 191, 0.2);
       color: #fff;
     }
 
@@ -736,6 +906,8 @@
 
     .region-tabs {
       display: flex;
+      position: relative;
+      z-index: 3;
       gap: 8px;
       padding: 2px 20px 12px;
       overflow-x: auto;
@@ -748,10 +920,20 @@
 
     .map-body {
       position: relative;
+      z-index: 3;
       min-height: 0;
       padding: 16px 20px 20px;
       display: grid;
       place-items: center;
+      overflow: hidden;
+    }
+
+    .map-body::after {
+      content: none;
+    }
+
+    .map-body.map-switching::after {
+      animation: none;
     }
 
     .region-popover {
@@ -759,12 +941,14 @@
       left: 50%;
       top: 50%;
       z-index: 10;
-      width: min(330px, calc(100% - 32px));
-      padding: 16px;
-      border: 1px solid var(--accent-line);
-      border-radius: 12px;
-      background: rgba(8, 14, 27, 0.96);
-      box-shadow: 0 0 0 1px rgba(92, 242, 255, 0.08), 0 22px 60px rgba(0, 0, 0, 0.42), 0 0 28px rgba(92, 242, 255, 0.12);
+      width: min(350px, calc(100% - 32px));
+      padding: 14px;
+      border: 1px solid rgba(103, 245, 228, 0.5);
+      border-radius: 0;
+      background:
+        linear-gradient(180deg, rgba(103, 245, 228, 0.1), transparent 42%),
+        rgba(6, 10, 18, 0.97);
+      box-shadow: 0 18px 46px rgba(0, 0, 0, 0.52), 0 0 20px rgba(45, 212, 191, 0.12), inset 0 1px 0 rgba(103, 245, 228, 0.24);
       transform: translate(-50%, -50%);
       animation: modalIn 180ms ease both;
     }
@@ -778,27 +962,36 @@
       justify-content: space-between;
       gap: 10px;
       align-items: flex-start;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(103, 245, 228, 0.22);
     }
 
     .region-popover strong {
       display: block;
-      font-size: 17px;
+      font-size: 15px;
+      font-family: var(--font-terminal);
+      letter-spacing: 0.03em;
       line-height: 1.25;
     }
 
     .region-popover p {
-      margin: 8px 0 12px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.45;
+      margin: 12px 0 14px;
+      padding: 10px 11px;
+      background: rgba(0, 0, 0, 0.16);
+      color: var(--ink);
+      font-family: var(--font-terminal);
+      font-size: 12px;
+      letter-spacing: 0.02em;
+      line-height: 1.5;
     }
 
     .region-popover-close {
       width: 28px;
       height: 28px;
-      border: 1px solid rgba(92, 242, 255, 0.22);
-      border-radius: 10px;
-      background: rgba(92, 242, 255, 0.08);
+      border: 1px solid rgba(103, 245, 228, 0.28);
+      border-radius: 0;
+      background: rgba(0, 0, 0, 0.12);
+      color: var(--muted);
       cursor: pointer;
       line-height: 1;
     }
@@ -806,21 +999,41 @@
     .region-select-button {
       width: 100%;
       height: 40px;
-      border: 1px solid var(--accent-line);
-      border-radius: 10px;
-      background: rgba(92, 242, 255, 0.16);
+      border: 1px solid rgba(103, 245, 228, 0.52);
+      border-radius: 0;
+      background: rgba(103, 245, 228, 0.1);
       color: #fff;
       cursor: pointer;
+      font-family: var(--font-terminal);
+      font-size: 12px;
       font-weight: 600;
+      letter-spacing: 0.04em;
+      transition: background 140ms ease, border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+    }
+
+    .region-select-button:hover {
+      border-color: rgba(103, 245, 228, 0.72);
+      background: rgba(103, 245, 228, 0.14);
+      box-shadow: 0 0 14px rgba(45, 212, 191, 0.22);
+    }
+
+    .region-select-button:active {
+      transform: translateY(1px);
     }
 
     #map {
+      --map-lift: -10px;
       width: min(100%, 900px);
       padding: 16px 10px 12px;
       border: 0;
       border-radius: 0;
       background: transparent;
       overflow: hidden;
+      position: relative;
+    }
+
+    #map.map-switching .cartogram {
+      animation: mapHardSwap 620ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
     }
 
     .cartogram {
@@ -834,9 +1047,57 @@
       padding-bottom: calc(var(--tile-size) * 0.2);
     }
 
+    @keyframes mapHardSwap {
+      0% {
+        opacity: 0.22;
+        transform: translate3d(-10px, var(--map-lift), 0) skewX(-2deg);
+        filter: blur(2.2px) contrast(1.45) saturate(1.25);
+      }
+      28% {
+        opacity: 0.66;
+        transform: translate3d(7px, calc(var(--map-lift) - 1px), 0) skewX(1deg);
+        filter: blur(1.2px) contrast(1.25) saturate(1.2);
+      }
+      58% {
+        opacity: 0.88;
+        transform: translate3d(-3px, var(--map-lift), 0) skewX(-0.5deg);
+        filter: blur(0.8px) contrast(1.12) saturate(1.1);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, var(--map-lift), 0) skewX(0);
+        filter: none;
+      }
+    }
+
+    @keyframes mapScan {
+      0% {
+        opacity: 0;
+        transform: translateX(-42%);
+      }
+      16% {
+        opacity: 0.82;
+      }
+      54% {
+        opacity: 0.52;
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(42%);
+      }
+    }
+
     .cartogram.single-tile {
       width: 100%;
       grid-template-columns: var(--tile-size);
+      justify-content: center;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .cartogram.double-tile {
+      width: 100%;
+      grid-template-columns: repeat(2, var(--tile-size));
       justify-content: center;
       padding-left: 0;
       padding-right: 0;
@@ -854,13 +1115,14 @@
       height: calc(var(--tile-size) * 1.14);
       padding: 8px 10px;
       border: 0;
-      border-radius: 16px;
+      border-radius: 0;
       background: #ffffff;
       clip-path: url("#rounded-hex");
       display: grid;
       place-items: center;
       text-align: center;
-      font-family: "IBM Plex Sans KR", system-ui, sans-serif;
+      font-family: var(--font-ui);
+      font-feature-settings: "tnum" 1;
       font-size: 13px;
       font-weight: 500;
       line-height: 1.2;
@@ -878,13 +1140,13 @@
     .tile.selected {
       outline: 2px solid var(--accent);
       outline-offset: 4px;
-      filter: drop-shadow(0 0 14px rgba(92, 242, 255, 0.62));
+      filter: drop-shadow(0 0 14px rgba(45, 212, 191, 0.62));
       transform: translateY(-2px) scale(1.03);
     }
 
     .tile.my-region {
       outline: 0;
-      box-shadow: 0 0 20px rgba(92, 242, 255, 0.3), 0 12px 24px rgba(0, 0, 0, 0.24);
+      box-shadow: 0 0 20px rgba(45, 212, 191, 0.3), 0 12px 24px rgba(0, 0, 0, 0.24);
     }
 
     .tile.my-region::after {
@@ -909,10 +1171,10 @@
       z-index: 1;
       width: 5px;
       height: 9px;
-      border: solid #5cf2ff;
-      border-width: 0 2.5px 2.5px 0;
+      border: solid var(--hot);
+      border-width: 0 3px 3px 0;
       transform: rotate(45deg);
-      filter: drop-shadow(0 0 5px rgba(92, 242, 255, 0.9));
+      filter: drop-shadow(0 0 7px rgba(45, 212, 191, 0.88)) drop-shadow(0 0 2px rgba(255, 255, 255, 0.42));
       pointer-events: none;
     }
 
@@ -992,9 +1254,13 @@
       margin-top: calc(var(--tile-size) * -0.24);
     }
 
+    #map .cartogram {
+      transform: translateY(var(--map-lift));
+    }
+
     #map[data-view="national"] .cartogram,
     #map[data-view="gyeonggi"] .cartogram {
-      transform: none;
+      transform: translateY(var(--map-lift));
     }
 
     #map[data-view="gyeonggi"] {
@@ -1022,13 +1288,14 @@
 
       .right-rail {
         order: 3;
-        height: auto;
-        min-height: 520px;
+        height: calc(100vh - 20px);
+        min-height: 0;
+        overflow: hidden;
       }
 
       .reaction-card {
-        height: auto;
-        min-height: 520px;
+        height: 100%;
+        min-height: 0;
       }
 
     }
@@ -1098,6 +1365,16 @@
       .cartogram.compact-map { padding-left: 12px; padding-right: 12px; }
       .cartogram { row-gap: 0; }
 
+      .tile.my-region::before {
+        right: 13px;
+        top: 11px;
+      }
+
+      .tile.my-region::after {
+        right: 8px;
+        top: 8px;
+      }
+
       .cols-9 { grid-template-columns: repeat(4, var(--tile-size)); }
       .cols-7 { grid-template-columns: repeat(4, var(--tile-size)); }
       .cols-6 { grid-template-columns: repeat(4, var(--tile-size)); }
@@ -1140,9 +1417,14 @@
 
       .tile.stacked { margin-top: calc(var(--tile-size) * -0.18); }
 
+      #map {
+        --map-lift: -6px;
+      }
+
+      #map .cartogram,
       #map[data-view="national"] .cartogram,
       #map[data-view="gyeonggi"] .cartogram {
-        transform: none;
+        transform: translateY(var(--map-lift));
       }
     }
   </style>
@@ -1159,21 +1441,21 @@
     <main>
       <aside class="panel">
         <section class="section issue-card" aria-label="현재 이슈">
-          <div class="issue-kicker">OBSERVED STATE</div>
-          <p class="issue-question">오늘 점심은 짜장 vs 짬뽕?</p>
-          <div class="issue-options">짜장면 · 짬뽕 · 아직 못 정함</div>
+          <div class="issue-kicker">OBSERVED SIGNAL</div>
+          <p class="issue-question">짜장면 vs 짬뽕?</p>
+          <div class="issue-options">지역별 선택 기록 중</div>
         </section>
 
         <section class="section">
           <h2>내 지역</h2>
           <div class="local-card">
             <strong id="current-location-label">내 지역 : 선택 전</strong>
-            <div class="muted" id="current-location-note">지도에서 지역을 누른 뒤 내 지역으로 선택해 주세요.</div>
+            <div class="muted" id="current-location-note">지도에서 지역을 선택해 주세요.</div>
           </div>
           <div class="support-buttons" aria-label="반응 선택">
             <button class="support blue" type="button">짜장면</button>
             <button class="support red" type="button">짬뽕</button>
-            <button class="support gray" type="button">아직 못 정함</button>
+            <button class="support gray" type="button">미정</button>
           </div>
         </section>
 
@@ -1181,8 +1463,8 @@
           <h3>오늘의 요약</h3>
           <div class="metric-list">
             <div class="metric"><span id="local-summary-label">선택 화면 흐름</span><strong id="local-summary-total">집계 전</strong></div>
-            <div class="metric"><span>팽팽한 지역</span><strong id="close-region-total">9곳</strong></div>
-            <div class="metric"><span>참여 부족</span><strong id="low-volume-total">4곳</strong></div>
+            <div class="metric"><span>팽팽한 지역</span><strong id="close-region-total">9<span class="metric-unit">지역</span></strong></div>
+            <div class="metric"><span>참여 부족</span><strong id="low-volume-total">4<span class="metric-unit">지역</span></strong></div>
           </div>
         </section>
 
@@ -1196,7 +1478,7 @@
           </div>
         </section>
 
-        <section class="section">
+        <section class="section notice-section">
           <div class="notice">표시되는 값은 서비스 안에서 선택된 결과 기준입니다.</div>
         </section>
 
@@ -1204,13 +1486,14 @@
           <h3>접속 현황</h3>
           <div class="visitor-row"><span>현재 접속자</span><strong id="active-visitor-total">집계 중</strong></div>
           <div class="visitor-row"><span>오늘 접속자</span><strong id="today-visitor-total">집계 중</strong></div>
+          <div class="contact-line"><span>CONTACT</span><a href="mailto:dimple20@naver.com">dimple20@naver.com</a></div>
         </section>
       </aside>
 
       <section class="panel map-panel">
         <div class="map-head">
           <div>
-            <h2 id="map-title">오늘 점심은 짜장 vs 짬뽕?</h2>
+            <h2 id="map-title">짜장면 vs 짬뽕?</h2>
             <div class="muted" id="map-subtitle">전국 · 짜장면 강세 · 선택 차이 5.4%p · 최근 7일 참여 8,200명</div>
           </div>
           <div class="map-actions">
@@ -1220,7 +1503,7 @@
         </div>
         <nav class="region-tabs" id="region-tabs" aria-label="지역 선택"></nav>
         <div class="active-region-badge" aria-live="polite">
-          <span>현재 보는 지역</span>
+          <span>현재 지역</span>
           <strong id="active-region-label">전국</strong>
         </div>
         <div class="map-body">
@@ -1239,13 +1522,13 @@
       <div class="right-rail">
         <div class="banner-card reaction-card">
           <div>
-            <div class="banner-eyebrow">LIVE REACTIONS</div>
-            <h3 class="banner-title">응원하기</h3>
+            <div class="banner-eyebrow">REACTION LOG</div>
+            <h3 class="banner-title">한 줄 반응</h3>
           </div>
           <div class="reaction-list" id="reaction-list" aria-live="polite"></div>
           <form class="reaction-form" id="reaction-form">
             <div class="reaction-input-wrap">
-              <input class="reaction-input" id="reaction-input" maxlength="36" placeholder="우리 동네 왜 짬뽕이냐" autocomplete="off" />
+              <input class="reaction-input" id="reaction-input" maxlength="36" placeholder="짧게 남기기" autocomplete="off" />
               <div class="reaction-count" id="reaction-count">0 / 36</div>
             </div>
             <button class="reaction-submit" type="submit">남기기</button>
@@ -1634,11 +1917,11 @@
     function updateMyRegionDisplay() {
       if (!myRegion?.regionName) {
         currentLocationLabel.textContent = "내 지역 : 선택 전";
-        currentLocationNote.textContent = "지도에서 지역을 클릭한 뒤 내 지역으로 선택해 주세요.";
+        currentLocationNote.textContent = "지도에서 지역을 선택해 주세요.";
         return;
       }
       currentLocationLabel.textContent = `내 지역 : ${displayRegionName(myRegion.regionName, myRegion.parentRegion)}`;
-      currentLocationNote.textContent = "이 지역 기준으로 투표와 응원이 반영됩니다. 다른 지역으로 바꾸려면 지도를 클릭해 선택해 주세요.";
+      currentLocationNote.textContent = "투표와 응원은 이 지역 기준입니다.";
     }
 
     function updateLocalSummary() {
@@ -1646,6 +1929,12 @@
       if (nationalSummaryTotal) nationalSummaryTotal.textContent = "0";
       localSummaryLabel.textContent = selectedRegionName === "전국" ? "현재 화면 흐름" : `${displayRegionName(selectedRegionName, selectedRegionParent)} 흐름`;
       localSummaryTotal.textContent = selectedRegionStat?.label || "집계 전";
+    }
+
+    function renderCountWithUnit(element, value, unit = "지역") {
+      if (!element) return;
+      const count = Number(value || 0).toLocaleString();
+      element.innerHTML = `${count}<span class="metric-unit">${unit}</span>`;
     }
 
     async function fetchSummaryFromApi() {
@@ -1661,8 +1950,8 @@
           localSummaryLabel.textContent = payload.data.localLabel || `${displayRegionName(scopeRegion)} 흐름`;
           localSummaryTotal.textContent = payload.data.localTrendLabel || "집계 전";
         }
-        closeRegionTotal.textContent = `${Number(payload.data.closeRegionsCount || 0).toLocaleString()}곳`;
-        lowVolumeTotal.textContent = `${Number(payload.data.lowVolumeRegionsCount || 0).toLocaleString()}곳`;
+        renderCountWithUnit(closeRegionTotal, payload.data.closeRegionsCount);
+        renderCountWithUnit(lowVolumeTotal, payload.data.lowVolumeRegionsCount);
         return true;
       } catch {
         // 정적 미리보기에서는 샘플 요약을 그대로 쓴다.
@@ -1729,7 +2018,7 @@
     function choiceClassFromLabel(choiceLabel = "") {
       if (choiceLabel === "짜장면") return "blue";
       if (choiceLabel === "짬뽕") return "red";
-      if (choiceLabel === "아직 못 정함") return "gray";
+      if (choiceLabel === "미정") return "gray";
       return "gray";
     }
 
@@ -1845,7 +2134,7 @@
       if (!reactions.length) {
         const empty = document.createElement("div");
         empty.className = "reaction-item";
-        empty.innerHTML = `<p class="reaction-text">아직 기록된 한마디가 없어요.</p><div class="reaction-meta">내 지역을 선택하고 첫 반응을 남겨보세요.</div>`;
+        empty.innerHTML = `<p class="reaction-text">아직 반응이 없습니다.</p><div class="reaction-meta">지역 선택 후 남길 수 있습니다.</div>`;
         reactionList.appendChild(empty);
         return;
       }
@@ -1926,7 +2215,7 @@
     function shareText() {
       const regionName = displayRegionName(activeScopeName, selectedRegionParent);
       const stat = selectedRegionStat || statForName(activeScopeName);
-      return `오늘 점심은 짜장 vs 짬뽕? 현재 ${regionName}은 ${choiceToneLabel(stat.party)}!\n${window.location.href}`;
+      return `짜장면 vs 짬뽕? 현재 ${regionName}은 ${choiceToneLabel(stat.party)}!\n${window.location.href}`;
     }
 
     function fallbackCopy(text) {
@@ -2011,7 +2300,7 @@
     function choiceLabelFromId(choiceId) {
       if (choiceId === "blue") return "짜장면";
       if (choiceId === "red") return "짬뽕";
-      if (choiceId === "gray") return "아직 못 정함";
+      if (choiceId === "gray") return "미정";
       return "선택 전";
     }
 
@@ -2100,7 +2389,7 @@
     function normalizeSupportChoice(choice) {
       if (choice === "블루 웨이브" || choice === "블루바이브") return "짜장면";
       if (choice === "레드 웨이브" || choice === "레드바이브") return "짬뽕";
-      if (choice === "관망 중") return "아직 못 정함";
+      if (choice === "관망 중") return "미정";
       return choice;
     }
 
@@ -2386,6 +2675,27 @@
       return window.innerWidth <= 720;
     }
 
+    function triggerMapScan(force = false) {
+      const mapBody = map.closest(".map-body");
+      const mapPanel = map.closest(".map-panel");
+      const now = Date.now();
+      if (!force && now - (triggerMapScan.lastAt || 0) <= 9000) return;
+      triggerMapScan.lastAt = now;
+      map.classList.remove("map-switching");
+      mapBody?.classList.remove("map-switching");
+      mapPanel?.classList.remove("map-switching");
+      void map.offsetWidth;
+      map.classList.add("map-switching");
+      mapBody?.classList.add("map-switching");
+      mapPanel?.classList.add("map-switching");
+      window.clearTimeout(triggerMapScan.timer);
+      triggerMapScan.timer = window.setTimeout(() => {
+        map.classList.remove("map-switching");
+        mapBody?.classList.remove("map-switching");
+        mapPanel?.classList.remove("map-switching");
+      }, 640);
+    }
+
     function renderMap(items, colsClass, cols, resolver, onClick) {
       const mobile = isMobileLayout();
       const effectiveCols = mobile ? 4 : cols;
@@ -2395,8 +2705,10 @@
       const visibleTiles = padded.filter(Boolean).length;
       const compactClass = visibleTiles <= 6 ? " compact-map" : "";
       const singleClass = visibleTiles === 1 ? " single-tile" : "";
+      const doubleClass = visibleTiles === 2 ? " double-tile" : "";
       const effectiveColsClass = mobile ? "cols-mobile" : colsClass;
-      map.innerHTML = `<div class="cartogram ${effectiveColsClass}${compactClass}${singleClass}"></div>`;
+      triggerMapScan(false);
+      map.innerHTML = `<div class="cartogram ${effectiveColsClass}${compactClass}${singleClass}${doubleClass}"></div>`;
       const grid = map.querySelector(".cartogram");
       if (!mobile && colsClass === "cols-dynamic") {
         grid.style.setProperty("--dynamic-cols", cols);
@@ -2434,7 +2746,7 @@
     function renderNational() {
       setActiveMapParentRegion("전국");
       map.dataset.view = "national";
-      title.textContent = "오늘 점심은 짜장 vs 짬뽕?";
+      title.textContent = "짜장면 vs 짬뽕?";
       setActiveTab("전국");
       renderMap(
         nationalLayout,
@@ -2450,7 +2762,7 @@
     function renderGyeonggi() {
       setActiveMapParentRegion("경기");
       map.dataset.view = "gyeonggi";
-      title.textContent = "오늘 점심은 짜장 vs 짬뽕?";
+      title.textContent = "짜장면 vs 짬뽕?";
       setActiveTab("경기");
       renderMap(
         gyeonggiLayout,
@@ -2466,7 +2778,7 @@
     function renderSeoul() {
       setActiveMapParentRegion("서울");
       map.dataset.view = "seoul";
-      title.textContent = "오늘 점심은 짜장 vs 짬뽕?";
+      title.textContent = "짜장면 vs 짬뽕?";
       setActiveTab("서울");
       renderMap(
         seoulLayout,
@@ -2482,7 +2794,7 @@
     function renderGenericRegion(name) {
       setActiveMapParentRegion(name);
       map.dataset.view = "generic";
-      title.textContent = "오늘 점심은 짜장 vs 짬뽕?";
+      title.textContent = "짜장면 vs 짬뽕?";
       setActiveTab(name);
       const customLayout = customRegionLayouts[name];
       const items = customLayout?.items || genericLayouts[name] || [name];
@@ -2571,6 +2883,7 @@
         button.dataset.region = name;
         button.textContent = name;
         button.addEventListener("click", () => {
+          triggerMapScan(true);
           renderRegion(name);
           scheduleMapStatsRefresh(name);
         });
