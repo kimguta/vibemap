@@ -1051,22 +1051,22 @@
     @keyframes mapHardSwap {
       0% {
         opacity: 0.22;
-        transform: translate3d(-10px, var(--map-lift), 0) skewX(-2deg);
+        transform: translate3d(0, var(--map-lift), 0);
         filter: blur(2.2px) contrast(1.45) saturate(1.25);
       }
       28% {
         opacity: 0.66;
-        transform: translate3d(7px, calc(var(--map-lift) - 1px), 0) skewX(1deg);
+        transform: translate3d(0, calc(var(--map-lift) - 1px), 0);
         filter: blur(1.2px) contrast(1.25) saturate(1.2);
       }
       58% {
         opacity: 0.88;
-        transform: translate3d(-3px, var(--map-lift), 0) skewX(-0.5deg);
+        transform: translate3d(0, var(--map-lift), 0);
         filter: blur(0.8px) contrast(1.12) saturate(1.1);
       }
       100% {
         opacity: 1;
-        transform: translate3d(0, var(--map-lift), 0) skewX(0);
+        transform: translate3d(0, var(--map-lift), 0);
         filter: none;
       }
     }
