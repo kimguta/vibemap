@@ -14,7 +14,6 @@ const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, "");
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 let memoryDb = null;
 const rateLimits = new Map();
-const visitorSessions = new Map();
 const choiceCooldownMs = 0;
 const reactionCooldownMs = 30000;
 const reactionResponseLimit = 18;
@@ -117,19 +116,18 @@ function todayKeyKst(date = new Date()) {
   }).format(date);
 }
 
-function visitorSnapshot() {
+function visitorSnapshotFromRows(rows = []) {
   const now = Date.now();
   const today = todayKeyKst();
   let activeNow = 0;
   let todayTotal = 0;
 
-  for (const [participantId, session] of visitorSessions.entries()) {
-    if (now - session.lastSeenAt > 24 * 60 * 60 * 1000) {
-      visitorSessions.delete(participantId);
-      continue;
-    }
-    if (now - session.lastSeenAt <= activeVisitorWindowMs) activeNow += 1;
-    if (session.todayKey === today) todayTotal += 1;
+  for (const row of rows) {
+    const lastSeenAt = Date.parse(row.lastSeenAt || row.last_seen_at || 0);
+    const rowTodayKey = row.todayKey || row.today_key;
+    if (!Number.isFinite(lastSeenAt)) continue;
+    if (now - lastSeenAt <= activeVisitorWindowMs) activeNow += 1;
+    if (rowTodayKey === today) todayTotal += 1;
   }
 
   return {
@@ -138,6 +136,41 @@ function visitorSnapshot() {
     activeWindowSeconds: Math.round(activeVisitorWindowMs / 1000),
     updatedAt: new Date().toISOString()
   };
+}
+
+function cleanupLocalVisitorSessions(db) {
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  db.visitorSessions = (db.visitorSessions || []).filter((session) => {
+    const lastSeenAt = Date.parse(session.lastSeenAt || 0);
+    return Number.isFinite(lastSeenAt) && lastSeenAt >= cutoff;
+  });
+  return db.visitorSessions;
+}
+
+function localVisitorSnapshot(db) {
+  return visitorSnapshotFromRows(cleanupLocalVisitorSessions(db));
+}
+
+async function upsertLocalVisitor(db, participantId) {
+  const now = new Date().toISOString();
+  const todayKey = todayKeyKst();
+  const sessions = cleanupLocalVisitorSessions(db);
+  const existing = sessions.find((session) => session.participantId === participantId);
+
+  if (existing) {
+    existing.lastSeenAt = now;
+    existing.todayKey = todayKey;
+  } else {
+    sessions.push({
+      participantId,
+      firstSeenAt: now,
+      lastSeenAt: now,
+      todayKey
+    });
+  }
+
+  await saveDb(db);
+  return localVisitorSnapshot(db);
 }
 
 async function readBody(req) {
@@ -489,6 +522,37 @@ async function deleteSupabaseChoice({ question, period, participantId }) {
   return { previousChoiceId, previousRegionId, unchanged: !previousChoiceId, updatedAt: now };
 }
 
+async function getSupabaseVisitorSnapshot() {
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const rows = await supabaseRequest(
+    `/visitor_sessions?select=participant_id,first_seen_at,last_seen_at,today_key&last_seen_at=gte.${encodeURIComponent(since)}`
+  );
+  return {
+    ...visitorSnapshotFromRows(rows || []),
+    storage: "supabase"
+  };
+}
+
+async function upsertSupabaseVisitor({ participantId }) {
+  const now = new Date().toISOString();
+  const existingRows = await supabaseRequest(
+    `/visitor_sessions?participant_id=eq.${encodeURIComponent(participantId)}&select=first_seen_at&limit=1`
+  );
+
+  await supabaseRequest("/visitor_sessions?on_conflict=participant_id", {
+    method: "POST",
+    headers: { prefer: "resolution=merge-duplicates" },
+    body: JSON.stringify({
+      participant_id: participantId,
+      first_seen_at: existingRows?.[0]?.first_seen_at || now,
+      last_seen_at: now,
+      today_key: todayKeyKst()
+    })
+  });
+
+  return getSupabaseVisitorSnapshot();
+}
+
 async function getSupabaseReactions(limit = 6) {
   const rows = await supabaseRequest(
     `/reactions?select=text,region_name,choice_label,created_at&order=created_at.desc&limit=${limit}`
@@ -578,18 +642,27 @@ async function handleApi(req, res, url) {
   }
 
   if (url.pathname === "/api/visitors" && req.method === "GET") {
-    return ok(res, visitorSnapshot());
+    if (hasSupabase()) {
+      try {
+        return ok(res, await getSupabaseVisitorSnapshot());
+      } catch (error) {
+        console.warn(`Supabase visitors unavailable, using local snapshot: ${error.message}`);
+      }
+    }
+    return ok(res, { ...localVisitorSnapshot(db), storage: "local-json" });
   }
 
   if (url.pathname === "/api/visitors" && req.method === "POST") {
     const body = await readBody(req);
     const participantId = String(body.participantId || makeParticipantId(req)).slice(0, 120);
-    visitorSessions.set(participantId, {
-      firstSeenAt: visitorSessions.get(participantId)?.firstSeenAt || Date.now(),
-      lastSeenAt: Date.now(),
-      todayKey: todayKeyKst()
-    });
-    return ok(res, visitorSnapshot());
+    if (hasSupabase()) {
+      try {
+        return ok(res, await upsertSupabaseVisitor({ participantId }));
+      } catch (error) {
+        console.warn(`Supabase visitor write unavailable, using local storage: ${error.message}`);
+      }
+    }
+    return ok(res, { ...(await upsertLocalVisitor(db, participantId)), storage: "local-json" });
   }
 
   if (url.pathname === "/api/questions" && req.method === "GET") {

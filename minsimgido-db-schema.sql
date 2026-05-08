@@ -55,6 +55,16 @@ create table if not exists participants (
   last_seen_at timestamptz not null default now()
 );
 
+create table if not exists visitor_sessions (
+  participant_id text primary key,
+  first_seen_at timestamptz not null default now(),
+  last_seen_at timestamptz not null default now(),
+  today_key text not null
+);
+
+create index if not exists idx_visitor_sessions_last_seen on visitor_sessions(last_seen_at desc);
+create index if not exists idx_visitor_sessions_today_key on visitor_sessions(today_key);
+
 create table if not exists participant_choices (
   id uuid primary key default gen_random_uuid(),
   question_id text not null references questions(id) on delete cascade,
