@@ -2740,8 +2740,7 @@
 
     function openProvinceFromNational(name) {
       hideRegionPopover();
-      renderRegion(name);
-      scheduleMapStatsRefresh(name);
+      renderRegionWithFreshStats(name);
     }
 
     function renderNational() {
@@ -2837,6 +2836,12 @@
       }, 0);
     }
 
+    async function renderRegionWithFreshStats(name) {
+      triggerMapScan(true);
+      await fetchMapStats(name);
+      renderRegion(name);
+    }
+
     async function refreshLiveData() {
       if (document.hidden) return;
       const activeRegion = document.querySelector(".region-tabs .chip.active")?.dataset.region || "전국";
@@ -2884,9 +2889,7 @@
         button.dataset.region = name;
         button.textContent = name;
         button.addEventListener("click", () => {
-          triggerMapScan(true);
-          renderRegion(name);
-          scheduleMapStatsRefresh(name);
+          renderRegionWithFreshStats(name);
         });
         tabs.appendChild(button);
       });
