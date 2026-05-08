@@ -780,7 +780,7 @@
       opacity: 0;
       background:
         linear-gradient(90deg, transparent, rgba(45, 212, 191, 0.16), transparent),
-        repeating-linear-gradient(180deg, transparent 0 15px, rgba(215, 255, 56, 0.052) 16px, transparent 19px),
+        repeating-linear-gradient(180deg, transparent 0 15px, rgba(103, 245, 228, 0.052) 16px, transparent 19px),
         repeating-linear-gradient(90deg, rgba(45, 212, 191, 0.028) 0 1px, transparent 1px 19px);
       mix-blend-mode: screen;
       filter: blur(0.5px);
@@ -1034,7 +1034,7 @@
     }
 
     #map.map-switching .cartogram {
-      animation: mapHardSwap 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+      animation: mapSoftIn 620ms cubic-bezier(0.16, 0.9, 0.22, 1) both;
     }
 
     .cartogram {
@@ -1048,21 +1048,11 @@
       padding-bottom: calc(var(--tile-size) * 0.2);
     }
 
-    @keyframes mapHardSwap {
+    @keyframes mapSoftIn {
       0% {
-        opacity: 0.96;
-        transform: translate3d(0, var(--map-lift), 0);
-        filter: blur(1.2px) contrast(1.22) saturate(1.12);
-      }
-      28% {
-        opacity: 0.98;
-        transform: translate3d(0, calc(var(--map-lift) - 1px), 0);
-        filter: blur(0.7px) contrast(1.16) saturate(1.08);
-      }
-      58% {
-        opacity: 0.99;
-        transform: translate3d(0, var(--map-lift), 0);
-        filter: blur(0.4px) contrast(1.08) saturate(1.04);
+        opacity: 0.68;
+        transform: translate3d(0, calc(var(--map-lift) + 10px), 0) scale(0.99);
+        filter: blur(3px) contrast(1.14) saturate(1.08);
       }
       100% {
         opacity: 1;
