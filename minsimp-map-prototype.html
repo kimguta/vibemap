@@ -1478,6 +1478,9 @@
           <h3>접속 현황</h3>
           <div class="visitor-row"><span>현재 접속자</span><strong id="active-visitor-total">집계 중</strong></div>
           <div class="visitor-row"><span>오늘 접속자</span><strong id="today-visitor-total">집계 중</strong></div>
+          <div class="visitor-row"><span>주간 접속자</span><strong id="weekly-visitor-total">집계 중</strong></div>
+          <div class="visitor-row"><span>월간 접속자</span><strong id="monthly-visitor-total">집계 중</strong></div>
+          <div class="visitor-row"><span>누적 접속자</span><strong id="all-time-visitor-total">집계 중</strong></div>
           <div class="contact-line"><span>CONTACT</span><a href="mailto:dimple20@naver.com">dimple20@naver.com</a></div>
         </section>
       </aside>
@@ -1706,6 +1709,9 @@
     const lowVolumeTotal = document.querySelector("#low-volume-total");
     const activeVisitorTotal = document.querySelector("#active-visitor-total");
     const todayVisitorTotal = document.querySelector("#today-visitor-total");
+    const weeklyVisitorTotal = document.querySelector("#weekly-visitor-total");
+    const monthlyVisitorTotal = document.querySelector("#monthly-visitor-total");
+    const allTimeVisitorTotal = document.querySelector("#all-time-visitor-total");
     const supportButtons = Array.from(document.querySelectorAll(".support"));
     const reactionForm = document.querySelector("#reaction-form");
     const reactionInput = document.querySelector("#reaction-input");
@@ -1984,10 +1990,16 @@
         if (!payload.ok || !payload.data) return false;
         activeVisitorTotal.textContent = Number(payload.data.activeNow || 0).toLocaleString();
         todayVisitorTotal.textContent = Number(payload.data.todayTotal || 0).toLocaleString();
+        weeklyVisitorTotal.textContent = Number(payload.data.weeklyTotal || 0).toLocaleString();
+        monthlyVisitorTotal.textContent = Number(payload.data.monthlyTotal || 0).toLocaleString();
+        allTimeVisitorTotal.textContent = Number(payload.data.allTimeTotal || 0).toLocaleString();
         return true;
       } catch {
         activeVisitorTotal.textContent = "집계 전";
         todayVisitorTotal.textContent = "집계 전";
+        weeklyVisitorTotal.textContent = "집계 전";
+        monthlyVisitorTotal.textContent = "집계 전";
+        allTimeVisitorTotal.textContent = "집계 전";
         return false;
       }
     }

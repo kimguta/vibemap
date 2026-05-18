@@ -119,31 +119,38 @@ function todayKeyKst(date = new Date()) {
 function visitorSnapshotFromRows(rows = []) {
   const now = Date.now();
   const today = todayKeyKst();
+  const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+  const monthAgo = now - 30 * 24 * 60 * 60 * 1000;
   let activeNow = 0;
   let todayTotal = 0;
+  let weeklyTotal = 0;
+  let monthlyTotal = 0;
+  let allTimeTotal = 0;
 
   for (const row of rows) {
     const lastSeenAt = Date.parse(row.lastSeenAt || row.last_seen_at || 0);
     const rowTodayKey = row.todayKey || row.today_key;
     if (!Number.isFinite(lastSeenAt)) continue;
+    allTimeTotal += 1;
     if (now - lastSeenAt <= activeVisitorWindowMs) activeNow += 1;
     if (rowTodayKey === today) todayTotal += 1;
+    if (lastSeenAt >= weekAgo) weeklyTotal += 1;
+    if (lastSeenAt >= monthAgo) monthlyTotal += 1;
   }
 
   return {
     activeNow,
     todayTotal,
+    weeklyTotal,
+    monthlyTotal,
+    allTimeTotal,
     activeWindowSeconds: Math.round(activeVisitorWindowMs / 1000),
     updatedAt: new Date().toISOString()
   };
 }
 
 function cleanupLocalVisitorSessions(db) {
-  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-  db.visitorSessions = (db.visitorSessions || []).filter((session) => {
-    const lastSeenAt = Date.parse(session.lastSeenAt || 0);
-    return Number.isFinite(lastSeenAt) && lastSeenAt >= cutoff;
-  });
+  db.visitorSessions = (db.visitorSessions || []).filter((session) => session.participantId);
   return db.visitorSessions;
 }
 
@@ -523,9 +530,8 @@ async function deleteSupabaseChoice({ question, period, participantId }) {
 }
 
 async function getSupabaseVisitorSnapshot() {
-  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const rows = await supabaseRequest(
-    `/visitor_sessions?select=participant_id,first_seen_at,last_seen_at,today_key&last_seen_at=gte.${encodeURIComponent(since)}`
+    "/visitor_sessions?select=participant_id,first_seen_at,last_seen_at,today_key"
   );
   return {
     ...visitorSnapshotFromRows(rows || []),
