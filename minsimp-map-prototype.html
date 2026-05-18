@@ -861,7 +861,14 @@
       flex-shrink: 0;
     }
 
-    .share-button {
+    .action-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+
+    .share-button,
+    .external-link-button {
       height: 34px;
       padding: 0 14px;
       border: 1px solid var(--accent-line);
@@ -873,15 +880,23 @@
       font-family: var(--font-terminal);
       font-size: 12px;
       letter-spacing: 0.04em;
+      text-decoration: none;
       transition: background 120ms ease, transform 120ms ease;
     }
 
-    .share-button:hover {
+    .external-link-button {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .share-button:hover,
+    .external-link-button:hover {
       background: rgba(45, 212, 191, 0.2);
       color: #fff;
     }
 
-    .share-button:active {
+    .share-button:active,
+    .external-link-button:active {
       transform: translateY(1px);
     }
 
@@ -1492,7 +1507,10 @@
             <div class="muted" id="map-subtitle">전국 · 짜장면 강세 · 선택 차이 5.4%p · 최근 7일 참여 8,200명</div>
           </div>
           <div class="map-actions">
-            <button class="share-button" id="share-button" type="button">공유</button>
+            <div class="action-buttons">
+              <button class="share-button" id="share-button" type="button">공유</button>
+              <a class="external-link-button" href="https://terminal-chat-jhzb.onrender.com/" target="_blank" rel="noopener noreferrer">CHAT</a>
+            </div>
             <div class="share-status" id="share-status" aria-live="polite"></div>
           </div>
         </div>
